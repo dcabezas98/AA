@@ -1,8 +1,10 @@
 
 import sklearn as sk
 from sklearn import datasets
+from sklearn import model_selection
 import matplotlib.pyplot as plt
-from random import shuffle
+from collections import Counter
+import numpy as np
 
 # Parte 1:
 
@@ -11,7 +13,7 @@ iris = sk.datasets.load_iris() # Leer dataset
 x = iris.data # Características: ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']
 y = iris.target # Clases: ['setosa' 'versicolor' 'virginica']
 
-x2 = [f[-2:] for f in x] # Dos últimas características
+x2 = x[:,-2:] # Dos últimas características
 
 for j in range(len(iris.target_names)):
     a, b = [], []
@@ -30,16 +32,18 @@ plt.show()
 
 # Parte 2:
 
-data = list(zip(x2, y))
+# stratify=y permite preservar la proporción de elementos de cada clase
+X_train, X_test, y_train, y_test = sk.model_selection.train_test_split(x2, y, stratify=y, train_size=0.8, test_size=0.2)
 
-training=[]
-test=[]
+print(Counter(y_train))
+print(Counter(y_test))
 
-for j in range(len(iris.target_names)):
-    a = [d for d in data if d[-1]==j]
-    shuffle(a)
-    training+=a[:int(len(a)*0.8)]
-    test+=a[int(len(a)*0.8):]
+# Parte 3:
 
-print(test)
-print(len(training))
+x = np.linspace(0,2*np.pi,100)
+
+plt.plot(x, np.sin(x), c='k', ls='--', label='sin(x)')
+plt.plot(x, np.cos(x), c='b', ls='--', label='cos(x)')
+plt.plot(x, np.sin(x)+np.cos(x), c='r', ls='--', label='sin(x)+cos(x)')
+plt.legend()
+plt.show()
