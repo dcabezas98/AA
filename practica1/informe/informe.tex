@@ -72,7 +72,7 @@ También las he calculado analíticamente y el gradiente queda de este modo:
 He ejecutado el algoritmo y, en sólo 10 iteraciones, he encontrado un valor por debajo de $\varepsilon$,
 en el punto $w=(0.0447362903977822,0.0239587140991418)$.
 
-\subsection{Estudiar la dependencia del \textbf{learning rate} ($\eta$)}
+\subsection{Estudio de la dependencia del \textbf{learning rate} ($\eta$)}
 
 He utilizado el algoritmo del gradiente descendente para buscar un mínimo local de la función
 $f(x,y)=(x-2)^2+2(y+2)^2+2\sin(2\pi x)\sin(2\pi y)$ partiendo desde el punto $(1,-1)$. Esta vez
@@ -101,4 +101,32 @@ en la segunda gráfica se aprecian valores de la función cercanos a -2, luego e
 En cambio, la tasa de aprendizaje $\eta=0.1$ es demasiado alta y esto provoca que se salte el punto donde se alcanza el
 mínimo local y el algoritmo no converja en el segundo caso. Es importante que la tasa de aprendizaje no sea demasiado alta
 para evitar esto.
+
+\subsection{Estudio de la dependencia del punto inicial escogido}
+
+He ejecutado el algoritmo del gradiente descendiente para localizar mínimos locales en la función $f(x,y)$ partiendo
+de distintas condiciones iniciales. Como no se especifica, he realizado 50 iteraciones y he fijado el valor $\eta=0.01$
+como learning rate. He obtenido los siguientes resultados:
+
+\begin{table}[H]
+    \begin{tabular}{|c|l|c|}
+    \hline
+                 & $(x,y)$ donde se alcanza el mínimo & $f(x,y)$                                        \\ \hline
+    $(2.1,-2.1)$ & -1.8200785415471563                & $( 2.2438049693647883 ,  -2.2379258214861775 )$ \\ \hline
+    $(3,-3)$     & -0.38124949743810005               & $( 2.730935648248105 ,  -2.7132791261667033 )$  \\ \hline
+    $(1.5,1.5)$  & 18.042078009957635                 & $( 1.7779244744891156 ,  1.032056872669696 )$   \\ \hline
+    $(1,-1)$     & -0.38124949743810027               & $( 1.269064351751895 ,  -1.2867208738332965 )$  \\ \hline
+    \end{tabular}
+\end{table}
+
+El algoritmo ha encontrado mínimos locales con valores muy diversos, lo que deja claro la dependencia del punto inicial.
+Partiendo del punto $(1.5,1.5)$ he obtenido a una solución pésima, ya que ha quedado atrapado en un mínimo local con un
+valor muy elevado. En cambio, partiendo del $(2.1,-2.1)$ he obtenido un
+valor bastante cercano al mínimo absoluto, valor que no he obtenido con ninguna de las otras dos condiciones iniciales.
+En este problema sé qué soluciones son buenas y cuales son malas porque he podido visualizar la función, pero en el caso
+bastante común de que el espacio de funciones candidatas tenga dimensión mayor (haya que ajustar más de dos parámetros)
+habría que minimizar una función de error que no se puede visualizar. Por tanto, el mínimo absoluto de una función de
+varias variables es muy difícil de encontrar con certeza, a no ser que la función sea convexa. 
+
+\section{Ejercicio sobre regresión lineal}
 \end{document} 
