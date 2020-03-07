@@ -19,17 +19,17 @@ u, v = sp.symbols('u v')
 # Función a minimizar
 E_sym=sp.Lambda((u,v), sp.simplify((u*sp.exp(v)-2*v*sp.exp(-u))**2))
 def E(w):
-    return float(E_sym(w[0],w[1]))
+    return sp.N(E_sym(w[0],w[1]))
 
 # Derivada parcial de E respecto de u
 Eu_sym=sp.Lambda((u,v), sp.simplify(sp.diff(E_sym(u,v),u)))
 def Eu(w):
-	return float(Eu_sym(w[0],w[1]))
+	return sp.N(Eu_sym(w[0],w[1]))
 
 # Derivada parcial de E respecto de v
 Ev_sym=sp.Lambda((u,v), sp.simplify(sp.diff(E_sym(u,v),v)))
 def Ev(w):
-	return float(Ev_sym(w[0],w[1]))
+	return sp.N(Ev_sym(w[0],w[1]))
 	
 # Gradiente de E
 def gradE(w):
@@ -97,7 +97,8 @@ def gradf(w):
 def gd_grafica(w, lr, grad_fun, fun, max_iters = 1000):
 
 	graf = []
-
+	graf.append(fun(w))
+	
 	for _ in range(max_iters):
 		grad=grad_fun(w)
 		w=w-lr*grad
@@ -105,8 +106,8 @@ def gd_grafica(w, lr, grad_fun, fun, max_iters = 1000):
 		#print(w, fun(w))
 
 	graf = np.array(graf)
-
-	plt.plot(range(1,max_iters+1), graf, 'bo')
+	
+	plt.plot(range(0,max_iters+1), graf, 'bo')
 	plt.xlabel('Iteraciones')
 	plt.ylabel('f(x,y)')
 	plt.show()	
