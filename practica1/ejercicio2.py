@@ -12,6 +12,8 @@ from mpl_toolkits.mplot3d import Axes3D # Para dibujar en 3D
 #------------- Ejercicio sobre regresión lineal ----------------#
 #------------------------------------------------------------------------------#
 
+#------------------------------Ejercicio 1 ------------------------------------#
+
 # Función para pintar los planos obtenidos
 def Pintar(w, x, y, title):
 	fig = plt.figure()
@@ -135,3 +137,57 @@ Pintar(w,x,y,'Solución obtenida con pseudoinversa')
 print ('\nBondad del resultado para el algoritmo de la pseudoinversa:\n')
 print ("Ein: ", Err(x,y,w))
 print ("Eout: ", Err(x_test, y_test, w))
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+
+#------------------------------Ejercicio 2 ------------------------------------#
+
+# Simula datos en un cuadrado [-size,size]x[-size,size] (en caso bidimensional, d=2)
+def simula_unif(N, d, size):
+	return np.random.uniform(-size,size,[N,d]) # A 2x3 array
+	
+# EXPERIMENTO	
+# a) Muestra de entrenamiento N = 1000, cuadrado [-1,1]x[-1,1]	
+
+print ('Ejercicio 2\n')
+print ('Muestra N = 1000, cuadrado [-1,1]x[-1,1]')
+x=simula_unif(1000,2,1)
+
+plt.scatter(x[:,0],x[:,1])
+plt.show()
+
+# b) Asignar etiquetas por f(x1,x2)=sign((x1-0.2)²+x2²-0.6)
+def f(x1,x2):
+	return np.sign((x1-0.2)**2+x2**2-0.6)
+
+y = np.array(f(x[:,0],x[:,1]))
+
+# Introducir ruido:
+noisy=np.random.randint(len(y), size=int(len(y)*0.1))
+
+for i in noisy:
+	y[i]=-y[i]
+
+a = np.array([xi for i, xi in enumerate(x) if y[i]==1])
+plt.scatter(a[:,0],a[:,1],c='b',label='y=1')
+b = np.array([xi for i, xi in enumerate(x) if y[i]==-1])
+plt.scatter(b[:,0],b[:,1],c='r',label='y=-1')
+plt.legend(title='Etiqueta:', loc='upper left')
+plt.show()
+exit()
+
+# d) Ejecutar el experimento 1000 veces
+
+print ('Errores Ein y Eout medios tras 1000reps del experimento:\n')
+print ("Ein media: ", Ein_media)
+print ("Eout media: ", Eout_media)
+
+input("\n--- Pulsar tecla para salir ---\n")
+# d) Ejecutar el experimento 1000 veces
+
+print ('Errores Ein y Eout medios tras 1000reps del experimento:\n')
+print ("Ein media: ", Ein_media)
+print ("Eout media: ", Eout_media)
+
+input("\n--- Pulsar tecla para salir ---\n")
