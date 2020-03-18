@@ -15,7 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D # Para dibujar en 3D
 #------------------------------Ejercicio 1 ------------------------------------#
 
 # Función para pintar los planos obtenidos
-def Pintar(w, x, y, title):
+def Pintar_plano(w, x, y, title):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d') # Ejes
 	ax.scatter(x[:,1],x[:,2],y,color='r') # Datos de entrenamiento
@@ -88,12 +88,9 @@ def sgd(x, y, lr, max_iters, tam_minibatch):
 	for _ in range(max_iters):
 		# Primero barajo, para hacer los minibatches de manera aleatoria		
 		np.random.shuffle(indices)
-
-		# Iteros los minibatches
-		for i in range(0,size-tam_minibatch+1,tam_minibatch): 
-			x1 = x[indices[i:i+tam_minibatch]]
-			y1= y[indices[i:i+tam_minibatch]]
-			w=w-lr*gradErr(x1,y1,w)
+		x1 = x[indices[0:tam_minibatch]]
+		y1= y[indices[0:tam_minibatch]]
+		w=w-lr*gradErr(x1,y1,w)
 
 	return w
 	
@@ -113,14 +110,14 @@ print ('EJERCICIO SOBRE REGRESION LINEAL\n')
 print ('Ejercicio 1\n')
 
 lr=0.001
-max_iters=50
+max_iters=1000
 tam_minibatch=32
 
 # Gradiente descendente estocastico
 w = sgd(x,y,lr,max_iters,tam_minibatch)
 
 # Pinto la solución:
-Pintar(w,x,y,'Solución obtenida con gradiente descendente estocástico')
+Pintar_plano(w,x,y,'Solución obtenida con gradiente descendente estocástico')
 
 print ('Bondad del resultado para grad. descendente estocastico:\n')
 print ("Ein: ", Err(x,y,w))
@@ -132,7 +129,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 w = pseudoinverse(x, y)
 
 # Pinto la solución:
-Pintar(w,x,y,'Solución obtenida con pseudoinversa')
+Pintar_plano(w,x,y,'Solución obtenida con pseudoinversa')
 
 print ('\nBondad del resultado para el algoritmo de la pseudoinversa:\n')
 print ("Ein: ", Err(x,y,w))
@@ -154,7 +151,7 @@ print ('Ejercicio 2\n')
 print ('Muestra N = 1000, cuadrado [-1,1]x[-1,1]')
 x=simula_unif(1000,2,1)
 
-plt.scatter(x[:,0],x[:,1])
+plt.scatter(x[:,0],x[:,1]) # Pintar puntos
 plt.show()
 
 # b) Asignar etiquetas por f(x1,x2)=sign((x1-0.2)²+x2²-0.6)
@@ -165,29 +162,60 @@ y = np.array(f(x[:,0],x[:,1]))
 
 # Introducir ruido:
 noisy=np.random.randint(len(y), size=int(len(y)*0.1))
-
 for i in noisy:
 	y[i]=-y[i]
 
+# Pintar etiquetas
 a = np.array([xi for i, xi in enumerate(x) if y[i]==1])
 plt.scatter(a[:,0],a[:,1],c='b',label='y=1')
 b = np.array([xi for i, xi in enumerate(x) if y[i]==-1])
 plt.scatter(b[:,0],b[:,1],c='r',label='y=-1')
 plt.legend(title='Etiqueta:', loc='upper left')
 plt.show()
-exit()
+
+# c) Ajustar por regresión lineal
+
+x=np.array([[1,xi[0],xi[1]] for xi in x])
+
+lr = 0.001
+max_iters=1000
+tam_minibatch=32
+
+w = sgd(x,y,lr,max_iters,tam_minibatch)
 
 # d) Ejecutar el experimento 1000 veces
 
-print ('Errores Ein y Eout medios tras 1000reps del experimento:\n')
-print ("Ein media: ", Ein_media)
-print ("Eout media: ", Eout_media)
+Ein_media = 0
+Eout_media = 0
 
-input("\n--- Pulsar tecla para salir ---\n")
-# d) Ejecutar el experimento 1000 veces
+for _ in range(50):
+	# Train
+	x=simula_unif(1000,2,1)
+	y = np.array(f(x[:,0],x[:,1]))
+	noisy=np.random.randint(len(y), size=int(len(y)*0.1))
+	for i in noisy:
+		y[i]=-y[i]
 
-print ('Errores Ein y Eout medios tras 1000reps del experimento:\n')
-print ("Ein media: ", Ein_media)
-print ("Eout media: ", Eout_media)
+	x2=np.square(x)
+	w = sgd(x2,y,lr,max_iters,tam_minibatch)
+
+	Ein_media+=Err(x2,y,w)
+
+	# Test
+	x=simula_unif(1000,2,1)
+	y = np.array(f(x[:,0],x[:,1]))
+	noisy=np.random.randint(len(y), size=int(len(y)*0.1))
+	for i in noisy:
+		y[i]=-y[i]
+
+	x2=np.square(x)
+	Eout_media+=Err(x2,y,w)
+
+Ein_media/=50
+Eout_media/=50
+
+print('Errores Ein y Eout medios tras 1000reps del experimento:\n')
+print("Ein media: ", Ein_media)
+print("Eout media: ", Eout_media)
 
 input("\n--- Pulsar tecla para salir ---\n")
