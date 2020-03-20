@@ -100,6 +100,7 @@ def pseudoinverse(x, y):
 	w=np.dot(x_pinv,y)
 	return w
 	
+"""
 # Lectura de los datos de entrenamiento
 x, y = readData('datos/X_train.npy','datos/y_train.npy')
 # Lectura de los datos para el test
@@ -136,7 +137,7 @@ print ("Ein: ", Err(x,y,w))
 print ("Eout: ", Err(x_test, y_test, w))
 
 input("\n--- Pulsar tecla para continuar ---\n")
-
+"""
 
 #------------------------------Ejercicio 2 ------------------------------------#
 
@@ -183,38 +184,119 @@ tam_minibatch=32
 
 w = sgd(x,y,lr,max_iters,tam_minibatch)
 
+# Pintar la solución obtenida
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d') # Ejes
+ax.scatter(x[:,1],x[:,2],y,color='r') # Datos de entrenamiento
+
+xx, yy = np.meshgrid(np.linspace(-1,1,10),np.linspace(-1,1,10))
+z = np.array(w[0]+xx*w[1]+yy*w[2])
+
+ax.plot_surface(xx,yy, z, color='b', alpha=0.4) # Plano
+
+# Hago un plot 2D sin nada, para poder poner leyenda
+scatter1_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='r', marker = 'o')
+plane_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='b', marker = 's')
+ax.legend([scatter1_proxy, plane_proxy], ['Train', 'Solución'], numpoints = 1, loc='upper right')
+
+plt.title('Ajuste con características lineales',loc='left')
+plt.show()
+
 # d) Ejecutar el experimento 1000 veces
+
+def generate_data():
+	x=simula_unif(1000,2,1)
+	y = np.array(f(x[:,0],x[:,1]))
+	noisy=np.random.randint(len(y), size=int(len(y)*0.1))
+	for i in noisy:
+		y[i]=-y[i]
+
+	x=np.array([[1,xi[0],xi[1]] for xi in x])
+
+	return x,y
 
 Ein_media = 0
 Eout_media = 0
 
-for _ in range(50):
+for _ in range(1000):
 	# Train
-	x=simula_unif(1000,2,1)
-	y = np.array(f(x[:,0],x[:,1]))
-	noisy=np.random.randint(len(y), size=int(len(y)*0.1))
-	for i in noisy:
-		y[i]=-y[i]
+	x,y=generate_data()
 
-	x2=np.square(x)
-	w = sgd(x2,y,lr,max_iters,tam_minibatch)
+	w = sgd(x,y,lr,max_iters,tam_minibatch)
 
-	Ein_media+=Err(x2,y,w)
+	Ein_media+=Err(x,y,w)
 
 	# Test
-	x=simula_unif(1000,2,1)
-	y = np.array(f(x[:,0],x[:,1]))
-	noisy=np.random.randint(len(y), size=int(len(y)*0.1))
-	for i in noisy:
-		y[i]=-y[i]
+	x,y=generate_data()
 
-	x2=np.square(x)
-	Eout_media+=Err(x2,y,w)
+	Eout_media+=Err(x,y,w)
 
-Ein_media/=50
-Eout_media/=50
+Ein_media/=1000
+Eout_media/=1000
 
-print('Errores Ein y Eout medios tras 1000reps del experimento:\n')
+print('Errores Ein y Eout medios tras 1000reps del experimento con características lineales:\n')
+print("Ein media: ", Ein_media)
+print("Eout media: ", Eout_media)
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+# Experimento utilizando características cuadráticas
+
+def generate_data2(): # Nuevos datos, incluye las características cuadráticas
+
+	x, y = generate_data()
+	
+	x_square=np.array(np.square(x))
+	x_product=np.expand_dims(np.prod(np.array(x),axis=1),axis=1)
+
+	x=np.hstack((x,x_product,x_square[:,1:]))
+
+	return x,y
+
+x, y = generate_data2()
+
+w = sgd(x,y,lr,max_iters,tam_minibatch)
+
+# Pintar la solución obtenida
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d') # Ejes
+ax.scatter(x[:,1],x[:,2],y,color='r') # Datos de entrenamiento
+
+xx, yy = np.meshgrid(np.linspace(-1,1,10),np.linspace(-1,1,10))
+z = np.array(w[0]+xx*w[1]+yy*w[2]+np.prod((xx,yy),axis=0)*w[3]+np.square(xx)*w[4]+np.square(yy)*w[5])
+
+ax.plot_surface(xx,yy, z, color='b', alpha=0.4) # Cuádrica
+
+# Hago un plot 2D sin nada, para poder poner leyenda
+scatter1_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='r', marker = 'o')
+plane_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='b', marker = 's')
+ax.legend([scatter1_proxy, plane_proxy], ['Train', 'Solución'], numpoints = 1, loc='upper right')
+
+plt.title('Ajuste con características cuadráticas',loc='left')
+plt.show()
+
+# Repito 1000 veces el experimento
+
+Ein_media = 0
+Eout_media = 0
+
+for _ in range(1000):
+	# Train
+	x,y=generate_data2()
+
+	w = sgd(x,y,lr,max_iters,tam_minibatch)
+
+	Ein_media+=Err(x,y,w)
+
+	# Test
+	x,y=generate_data2()
+
+	Eout_media+=Err(x,y,w)
+
+Ein_media/=1000
+Eout_media/=1000
+
+print('Errores Ein y Eout medios tras 1000reps del experimento con características no lineales:\n')
 print("Ein media: ", Ein_media)
 print("Eout media: ", Eout_media)
 
