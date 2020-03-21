@@ -36,11 +36,13 @@
 \author{David Cabezas Berrido}
 \date{\vspace{-5mm}}
 
-\title{\huge Práctica 1 \HRule\vspace{-4mm}}
+\title{\huge Aprendizaje Automático: Práctica 1 \HRule\vspace{-4mm}}
 
 \begin{document}
 \maketitle
 \tableofcontents
+
+\newpage
 
 \section{Ejercicio sobre la búsqueda iterativa de óptimos: \\ Gradiente descendiente}
 
@@ -119,14 +121,142 @@ como learning rate. He obtenido los siguientes resultados:
     \end{tabular}
 \end{table}
 
+\vspace{-5mm}
+
 El algoritmo ha encontrado mínimos locales con valores muy diversos, lo que deja claro la dependencia del punto inicial.
 Partiendo del punto $(1.5,1.5)$ he obtenido a una solución pésima, ya que ha quedado atrapado en un mínimo local con un
 valor muy elevado. En cambio, partiendo del $(2.1,-2.1)$ he obtenido un
 valor bastante cercano al mínimo absoluto, valor que no he obtenido con ninguna de las otras dos condiciones iniciales.
+
 En este problema sé qué soluciones son buenas y cuales son malas porque he podido visualizar la función, pero en el caso
 bastante común de que el espacio de funciones candidatas tenga dimensión mayor (haya que ajustar más de dos parámetros)
-habría que minimizar una función de error que no se puede visualizar. Por tanto, el mínimo absoluto de una función de
-varias variables es muy difícil de encontrar con certeza, a no ser que la función sea convexa. 
+habría que minimizar una función de error que no se puede visualizar.
+
+Por tanto, el mínimo absoluto de una función de
+varias variables es muy difícil de encontrar con certeza, a no ser que la
+función sea convexa. Así que la dificultad radica en que es difícil saber cuando
+hemos elegido un punto inicial y un learning rate adecuados.
+
 
 \section{Ejercicio sobre regresión lineal}
-\end{document} 
+
+\subsection{Dígitos manuscritos}
+
+Vamos a ajustar un modelo de regresión lineal a vectores de características
+extraídos de imágenes de dígitos manuscritos (sólo de los dígitos 1, con
+etiqueta -1 y 5, con etiqueta 1), concretamente el valor medio del nivel de
+gris y simetría del número respecto al eje vertical. Lo haremos tanto por el 
+algoritmo de la pseudoinversa como por el gradiente descendente estocástico.
+
+\newpage
+
+\subsubsection{Por pseudoinversa}
+Con el algoritmo de la pseudoinversa, los pesos que he obtenido son
+$w = [-1.11588016, -1.24859546, -0.49753165]$ y el plano solución el de esta
+figura.
+
+\vspace{-4mm}
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/digitos-pinv.png}
+    \caption{Plano obtenido con la pseudoinversa}
+    \label{fig:digitos-pinv}
+\end{figure}
+
+\vspace{-5mm}
+
+Bondad del ajuste: \quad
+$E_{in}(w)=0.07918658628900388$ ,\qquad
+$E_{out}(w)=0.13095383720052575$
+
+\subsubsection{Por gradiente descendente estocástico}
+Para el algoritmo del gradiente descendente estocástico, he usado el learning rate $\eta=0.001$, he fijado el tamaño de minibatch a 32 y he realizado 1000 iteraciones. Los pesos que he obtenido son
+$w=[-1.23746596,-0.20592339, -0.44426966]$ y el plano
+solución obtenido es el de esta figura. \vspace{-4mm}
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/digitos-sgd.png}
+    \caption{Plano obtenido con el gradiente descendente estocástico}
+    \label{fig:digitos-sgd}
+\end{figure}
+
+\vspace{-5mm}
+
+Bondad del ajuste: \quad
+$E_{in}(w)=0.08341974836353012$ ,\qquad
+$E_{out}(w)=0.13244457530997297$
+
+Ligeramente peores, debido a que es un método aproximado, pero bastante buenos.
+
+\subsection{Ejercicio sobre la complejidad del modelo lineal}
+
+Generamos una muestra de 1000 puntos uniformemente distribuidos en el intervalo
+$\mathcal{X}=[-1,1]\times[-1,1]$, asignamos etiquetas
+con la función $f(x_1,x_2)=\operatorname{sign}((x_1-0.2)^2+x_2^2-0.6)$ y
+cambiamos el 10\% de las etiquetas para añadir ruido. La muestra queda de esta forma: \vspace{-4mm}
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/sample-noise.png}
+    \caption{Muestra con ruido}
+    \label{fig:sample-noise}
+\end{figure} 
+
+\vspace{-5mm}
+
+Para los siguientes ajustes, he utilizado el algoritmo del gradiente descendente
+estocástico con learning rate $\eta=0.001$, tamaño de minibatch 32 y 1000 iteraciones.
+
+\subsubsection{Ajuste de un modelo de regresión con características lineales}
+He ajustado un modelo de regresión lineal utilizando el vector de características
+$(1,x_1,x_2)$, los pesos que he obtenido son $w=[0.04968622,-0.51886574,-0.0205383]$ y el plano solución es el siguiente. \vspace{-4mm}
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/regress-lin.png}
+    \caption{Plano obtenido utilizando características lineales}
+    \label{fig:regress-lin}
+\end{figure}
+
+\vspace{-5mm}
+
+He repetido el experimento 1000 veces y he obtenido los siguiente 
+errores medios: \\
+$E_{in}$ medio =  0.9240616367833707 ,\qquad
+$E_{out}$ medio =  0.929279797769683
+
+$E_{in}$ y $E_{out}$ están muy cercanos (lo que cabe esperar por la simplicidad del modelo).
+No obstante, son muy altos, cosa que también esperaba tras observar la 
+distribución, difícilmente iba a ser capaz de aproximar esa distribución con un plano.
+
+\subsubsection{Ajuste de un modelo de regresión con características no lineales (cuadráticas)}
+
+Esta vez, he ajustado un modelo de regresión lineal utilizando el vector de características
+$(1,x_1,x_2,x_1 x_2,x_1^2,x_2^2)$, los pesos que he obtenido son
+$w = [-0.83490846,-0.42438055,0.05310049,0.02361122,1.1982358,1.4037777]$
+y la cuádrica solución es el siguiente. \vspace{-4mm}
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/regress-nolin.png}
+    \caption{Plano obtenido utilizando características lineales}
+    \label{fig:regress-nolin}
+\end{figure}
+
+\vspace{-5mm}
+
+He repetido el experimento 1000 veces y he obtenido los siguiente 
+errores medios: \\
+$E_{in}$ medio =  0.5643661965437399 , \qquad
+$E_{out}$ medio =  0.5705303213340673
+
+En esta ocasión, $E_{in}$ y $E_{out}$ no están significativamente más distantes
+que en el modelo anterior a pesar del aumento de complejidad, y son bastante
+menores. En la figura se aprecia que la cuádrica obtenida (un paraboloide elíptico) aproxima mucho mejor la distribución que el plano del caso anterior.
+
+Por tanto, es obvio que \textbf{el modelo con características no lineales es más adecuado},
+ya que obtiene mayor precisión en el ajuste. Consigue un $E_{out}$ menor, que
+es el principal objetivo de la regresión.
+\end{document}

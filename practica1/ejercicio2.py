@@ -100,7 +100,7 @@ def pseudoinverse(x, y):
 	w=np.dot(x_pinv,y)
 	return w
 	
-"""
+
 # Lectura de los datos de entrenamiento
 x, y = readData('datos/X_train.npy','datos/y_train.npy')
 # Lectura de los datos para el test
@@ -117,6 +117,10 @@ tam_minibatch=32
 # Gradiente descendente estocastico
 w = sgd(x,y,lr,max_iters,tam_minibatch)
 
+print("Pesos obtenidos con el gradiente descendente estocástico:")
+print("w =",w)
+input("\n--- Pulsar tecla para continuar ---\n")
+
 # Pinto la solución:
 Pintar_plano(w,x,y,'Solución obtenida con gradiente descendente estocástico')
 
@@ -129,6 +133,10 @@ input("\n--- Pulsar tecla para continuar ---\n")
 # Algoritmo Pseudoinversa
 w = pseudoinverse(x, y)
 
+print("Pesos obtenidos con la pseudoinversa:")
+print("w =",w)
+input("\n--- Pulsar tecla para continuar ---\n")
+
 # Pinto la solución:
 Pintar_plano(w,x,y,'Solución obtenida con pseudoinversa')
 
@@ -137,7 +145,7 @@ print ("Ein: ", Err(x,y,w))
 print ("Eout: ", Err(x_test, y_test, w))
 
 input("\n--- Pulsar tecla para continuar ---\n")
-"""
+
 
 #------------------------------Ejercicio 2 ------------------------------------#
 
@@ -149,10 +157,11 @@ def simula_unif(N, d, size):
 # a) Muestra de entrenamiento N = 1000, cuadrado [-1,1]x[-1,1]	
 
 print ('Ejercicio 2\n')
-print ('Muestra N = 1000, cuadrado [-1,1]x[-1,1]')
+print ('Muestra N = 1000, cuadrado [-1,1]x[-1,1]\n')
 x=simula_unif(1000,2,1)
 
 plt.scatter(x[:,0],x[:,1]) # Pintar puntos
+plt.title('Muestra')
 plt.show()
 
 # b) Asignar etiquetas por f(x1,x2)=sign((x1-0.2)²+x2²-0.6)
@@ -172,6 +181,7 @@ plt.scatter(a[:,0],a[:,1],c='b',label='y=1')
 b = np.array([xi for i, xi in enumerate(x) if y[i]==-1])
 plt.scatter(b[:,0],b[:,1],c='r',label='y=-1')
 plt.legend(title='Etiqueta:', loc='upper left')
+plt.title('Muestra y etiquetas con ruido')
 plt.show()
 
 # c) Ajustar por regresión lineal
@@ -183,6 +193,10 @@ max_iters=1000
 tam_minibatch=32
 
 w = sgd(x,y,lr,max_iters,tam_minibatch)
+
+print("Pesos obtenidos con el gradiente descendente estocástico (características lineales):")
+print("w =",w)
+input("\n--- Pulsar tecla para continuar ---\n")
 
 # Pintar la solución obtenida
 fig = plt.figure()
@@ -204,6 +218,8 @@ plt.show()
 
 # d) Ejecutar el experimento 1000 veces
 
+repeats=1000
+
 def generate_data():
 	x=simula_unif(1000,2,1)
 	y = np.array(f(x[:,0],x[:,1]))
@@ -211,14 +227,16 @@ def generate_data():
 	for i in noisy:
 		y[i]=-y[i]
 
-	x=np.array([[1,xi[0],xi[1]] for xi in x])
+	x=np.hstack((np.ones((1000,1)),x)) # Le añado el 1 al vector de características
 
 	return x,y
 
 Ein_media = 0
 Eout_media = 0
 
-for _ in range(1000):
+print("Repitiendo 1000 veces: \n ... \n")
+
+for _ in range(repeats):
 	# Train
 	x,y=generate_data()
 
@@ -231,8 +249,8 @@ for _ in range(1000):
 
 	Eout_media+=Err(x,y,w)
 
-Ein_media/=1000
-Eout_media/=1000
+Ein_media/=repeats
+Eout_media/=repeats
 
 print('Errores Ein y Eout medios tras 1000reps del experimento con características lineales:\n')
 print("Ein media: ", Ein_media)
@@ -257,6 +275,10 @@ x, y = generate_data2()
 
 w = sgd(x,y,lr,max_iters,tam_minibatch)
 
+print("Pesos obtenidos con el gradiente descendente estocástico (características cuadráticas):")
+print("w =",w)
+input("\n--- Pulsar tecla para continuar ---\n")
+
 # Pintar la solución obtenida
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d') # Ejes
@@ -280,7 +302,9 @@ plt.show()
 Ein_media = 0
 Eout_media = 0
 
-for _ in range(1000):
+print("Repitiendo 1000 veces: \n ... \n")
+
+for _ in range(repeats):
 	# Train
 	x,y=generate_data2()
 
@@ -293,8 +317,8 @@ for _ in range(1000):
 
 	Eout_media+=Err(x,y,w)
 
-Ein_media/=1000
-Eout_media/=1000
+Ein_media/=repeats
+Eout_media/=repeats
 
 print('Errores Ein y Eout medios tras 1000reps del experimento con características no lineales:\n')
 print("Ein media: ", Ein_media)
