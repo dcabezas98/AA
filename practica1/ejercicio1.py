@@ -8,11 +8,11 @@ import sympy as sp
 import matplotlib.pyplot as plt
 
 #-------------------------------------------------------------------------------#
-#------------- Ejercicio sobre la búsqueda iterativa de óptimos ----------------#
+#------------- Ejercicio sobre la búsqueda iterativa de óptimos ---------------#
 #-------------------------------------------------------------------------------#
 
 #------------------------------Ejercicio 1 ------------------------------------#
-
+"""
 u, v = sp.symbols('u v')
 
 # Función a minimizar
@@ -65,9 +65,9 @@ input("\n--- Pulsar Intro para continuar ---\n")
 print ('Coordenadas obtenidas: (', w[0], ', ', w[1],')')
 
 input("\n--- Pulsar Intro para continuar ---\n")
+"""
 
-
-#------------------------------Ejercicio 2 -------------------------------------#
+#----------------------------- Ejercicio 2 --------------------------------#
 
 x, y = sp.symbols('x y')
 
@@ -92,7 +92,7 @@ def gradf(w):
 
 # a) Usar gradiente descendente para minimizar la función f, con punto inicial (1,-1)
 # tasa de aprendizaje 0.01 y max 50 iteraciones. Repetir con tasa de aprend. 0.1
-
+"""
 def gd_grafica(w, lr, grad_fun, fun, max_iters = 1000):
 
 	graf = []
@@ -109,7 +109,9 @@ def gd_grafica(w, lr, grad_fun, fun, max_iters = 1000):
 	plt.plot(range(0,max_iters+1), graf, 'bo')
 	plt.xlabel('Iteraciones')
 	plt.ylabel('f(x,y)')
-	plt.show()	
+	plt.show()
+
+	return graf
 
 
 # Punto inicial
@@ -166,6 +168,82 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 print ('Punto de inicio: (1.0, -1.0)\n')
 w=gd(np.array((1.0,-1.0),np.float64),lr,gradf,f,max_iters)
+print ('(x,y) = (', w[0], ', ', w[1],')\n')
+print ('Valor mínimo: ',f(w))
+
+input("\n--- Pulsar tecla para continuar ---\n")
+"""
+# BONUS: Método de Newton para minimizar funciones
+
+print("Método de Newton:\n")
+
+# Derivadas parciales de segundo orden:
+fxx_sym=sp.Lambda((x,y), sp.simplify(sp.diff(fx_sym(x,y),x)))
+def fxx(w):
+	return float(fxx_sym(w[0],w[1]))
+
+fxy_sym=sp.Lambda((x,y), sp.simplify(sp.diff(fx_sym(x,y),y)))
+def fxy(w):
+	return float(fxy_sym(w[0],w[1]))
+
+fyy_sym=sp.Lambda((x,y), sp.simplify(sp.diff(fy_sym(x,y),y)))
+def fyy(w):
+	return float(fyy_sym(w[0],w[1]))
+
+# Matriz Hessiana
+def hessf(w):
+	a=fxy(w) # f es de clase 2, así que fxy = fyx
+	return np.array([[fxx(w),a],[a,fyy(w)]])
+
+
+# Método de Newton para encontrar un 0 en la derivada
+def newton(w, grad_fun, hess_fun, fun, max_iters=500):
+
+	graf = []
+	graf.append(fun(w))
+
+	for _ in range(max_iters):
+
+		H1=np.linalg.inv(hess_fun(w))
+		w = w - np.dot(H1,grad_fun(w))
+		graf.append(fun(w))
+		
+
+	graf = np.array(graf,np.float64)
+	
+	plt.plot(range(0,max_iters+1), graf, 'bo')
+	plt.xlabel('Iteraciones')
+	plt.ylabel('f(x,y)')
+	plt.show()
+
+	return w, graf
+
+# Número de iteraciones
+max_iters=50
+
+print ('Punto de inicio: (2.1, -2.1)\n')
+w,graf=newton(np.array((2.1,-2.1),np.float64),gradf, hessf,f,max_iters)
+print ('(x,y) = (', w[0], ', ', w[1],')\n')
+print ('Valor minimo: ',f(w))
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+print ('Punto de inicio: (3.0, -3.0)\n')
+w,graf=newton(np.array((3.0,-3.0),np.float64),gradf, hessf,f,max_iters)
+print ('(x,y) = (', w[0], ', ', w[1],')\n')
+print ('Valor minimo: ',f(w))
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+print ('Punto de inicio: (1.5, 1.5)\n')
+w,graf=newton(np.array((1.5,1.5),np.float64),gradf, hessf,f,max_iters)
+print ('(x,y) = (', w[0], ', ', w[1],')\n')
+print ('Valor minimo: ',f(w))
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+print ('Punto de inicio: (1.0, -1.0)\n')
+w,graf=newton(np.array((1.0,-1.0),np.float64),gradf, hessf,f,max_iters)
 print ('(x,y) = (', w[0], ', ', w[1],')\n')
 print ('Valor mínimo: ',f(w))
 
