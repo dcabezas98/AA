@@ -44,7 +44,7 @@
 
 \newpage
 
-\section{Ejercicio sobre la búsqueda iterativa de óptimos: \\ Gradiente descendiente}
+\section{Ejercicio sobre la búsqueda iterativa de óptimos: Gradiente descendiente}
 
 \subsection{Minimizar la función $E(u,v)$}
 
@@ -111,13 +111,14 @@ de distintas condiciones iniciales. Como no se especifica, he realizado 50 itera
 como learning rate. He obtenido los siguientes resultados:
 
 \begin{table}[H]
-    \begin{tabular}{|c|l|c|}
+    \centering
+    \begin{tabular}{|c|c|c|}
     \hline
                  & $(x,y)$ donde se alcanza el mínimo & $f(x,y)$                                        \\ \hline
-    $(2.1,-2.1)$ & -1.8200785415471563                & $( 2.2438049693647883 ,  -2.2379258214861775 )$ \\ \hline
-    $(3,-3)$     & -0.38124949743810005               & $( 2.730935648248105 ,  -2.7132791261667033 )$  \\ \hline
-    $(1.5,1.5)$  & 18.042078009957635                 & $( 1.7779244744891156 ,  1.032056872669696 )$   \\ \hline
-    $(1,-1)$     & -0.38124949743810027               & $( 1.269064351751895 ,  -1.2867208738332965 )$  \\ \hline
+    $(2.1,-2.1)$ &  $( 2.2438049693647883 ,  -2.2379258214861775 )$               & -1.8200785415471563 \\ \hline
+    $(3,-3)$     &  $( 2.730935648248105 ,  -2.7132791261667033 )$              & -0.38124949743810005 \\ \hline
+    $(1.5,1.5)$  & $( 1.7779244744891156 ,  1.032056872669696 )$                & 18.042078009957635  \\ \hline
+    $(1,-1)$     &  $( 1.269064351751895 ,  -1.2867208738332965 )$              & -0.38124949743810027 \\ \hline
     \end{tabular}
 \end{table}
 
@@ -188,7 +189,7 @@ Bondad del ajuste: \quad
 $E_{in}(w)=0.08341974836353012$ ,\qquad
 $E_{out}(w)=0.13244457530997297$
 
-Ligeramente peores, debido a que es un método aproximado, pero bastante buenos.
+Ligeramente peores debido a que es un método aproximado, pero bastante buenos.
 
 \subsection{Ejercicio sobre la complejidad del modelo lineal}
 
@@ -259,4 +260,107 @@ menores. En la figura se aprecia que la cuádrica obtenida (un paraboloide elíp
 Por tanto, es obvio que \textbf{el modelo con características no lineales es más adecuado},
 ya que obtiene mayor precisión en el ajuste. Consigue un $E_{out}$ menor, que
 es el principal objetivo de la regresión.
+
+
+\section{Ejercicio BONUS: Método de Newton y comparación con gradiente descendente}
+
+He aplicado el Método de Newton para minimizar la función \\
+$f(x,y)=(x-2)^2+2(y+2)^2+2\sin(2\pi x)\sin(2\pi y)$ de las secciones 1.2 y 1.3. Este método se usa para encontrar un cero en una función,
+así que lo usamos para buscar un cero de la derivada.
+
+Al igual que hice para el gradiente, he calculado con \texttt{sympy} la matriz
+Hessiana de $f$. Sólo tengo que calcular 3 términos, ya que al ser $f$ de clase
+2, $\frac{\partial^2 f}{\partial x\partial y}=\frac{\partial^2 f}{\partial y\partial x}$ (la Hessiana es simétrica).
+
+A continuación están los resultados que he obtenido al realizar los experimentos
+de las secciones 1.2 y 1.3, correspondientes al ejercicio 3 de Gradiente
+Descendente. Hay una comparación con los resultados obtenidos usando el método de Newton y
+el gradiente descendente, y la evolución del valor de $f(x,y)$ a medida que ambos algoritmos iteran.
+Para el gradiente descendiente he fijado la tasa de aprendizaje $\eta=0.01$.
+Ambos algoritmos realizan 20 iteraciones.
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/newton-grad_1.png}
+    \caption{Newton frente a gradiente descendente, partiendo de $w=(2.1,-2.1)$}
+    \label{fig:newton-grad_1}
+\end{figure}
+
+Punto de inicio: $w=(2.1 -2.1)$ \\
+Solución y valor del método de Newton: \\
+$(x,y) = ( 1.7561950306352117 ,  -1.7620741785138223 ) \qquad
+f(x,y) =  -1.8200785415471563$ \\
+Solución y valor del gradiente estocástico: \\
+$(x,y) = ( 2.243804969364782 ,  -2.237925821486176 ) \quad
+f(x,y) =  -1.8200785415471563$
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/newton-grad_2.png}
+    \caption{Newton frente a gradiente descendente, partiendo de $w=(3, -3)$}
+    \label{fig:newton-grad_2}
+\end{figure}
+
+Punto de inicio: $w=(3, -3)$ \\
+Solución y valor del método de Newton: \\
+$(x,y) = ( 3.0539755549386394 ,  -3.028461459660191 ) \qquad
+f(x,y) =  3.1079800610352017$ \\
+Solución y valor del gradiente estocástico: \\
+$(x,y) = ( 2.730935648250149 ,  -2.7132791261680187 ) \quad
+f(x,y) =  -0.38124949743810027$
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/newton-grad_3.png}
+    \caption{Newton frente a gradiente descendente, partiendo de $w=(1.5, 1.5)$}
+    \label{fig:newton-grad_3}
+\end{figure}
+
+Punto de inicio: $w=(1.5, 1.5)$ \\
+Solución y valor del método de Newton: \\
+$(x,y) = ( 1.70483098300433 ,  0.9731715834776464 ) \qquad
+f(x,y) =  18.08874203270784$ \\
+Solución y valor del gradiente estocástico: \\
+$(x,y) = ( 1.7730524579287212 ,  1.0365450542766357 ) \quad
+f(x,y) =  18.042269888102044$
+
+\begin{figure}[H]
+    \centering    
+    \includegraphics[width=100mm]{imgs/newton-grad_4.png}
+    \caption{Newton frente a gradiente descendente, partiendo de $w=(1,-1)$}
+    \label{fig:newton-grad_4}
+\end{figure}
+
+Punto de inicio: $w=(1 -1)$ \\
+Solución y valor del método de Newton: \\
+$(x,y) = ( 0.9460244450613605 ,  -0.9715385403398092 ) \qquad
+f(x,y) =  3.107980061035202$ \\
+Solución y valor del gradiente estocástico: \\
+$(x,y) = ( 1.2690643517498512 ,  -1.2867208738319813 ) \quad
+f(x,y) =  -0.38124949743810027$
+
+\newpage
+
+\textbf{\Large Valoración:} \\
+
+El gradiente descendente, busca cero de la derivada, pero siempre avanza
+hacia donde decrece la pendiente para así llegar a un mínimo local.
+En cambio, el método de Newton se limita a buscar un cero de la derivada, independientemente de que sea un
+mínimo local, máximo local o punto de silla.
+
+Esto provoca que en algunas ocasiones, el método de Newton no proporcione un
+mínimo local, sino otro punto crítico. Por eso no debe usarse como sustituto
+del gradiente descendente, sino cuando sepamos que estamos muy cerca del mínimo.
+
+Respecto a la precisión, ambos métodos han coseguido resultados
+similares en los casos en los que el método de Newton no se ha
+desviado hacia otro punto crítico. También es destacable
+el hecho de que en ninguno de los cuatro experimentos, los
+algoritmos hayan alcanzado la misma solución (el mismo $w$).
+
+Aun así, el método de Newton sí tiene una ventaja, y es que no
+hay que elegir un learning rate, por lo que no corremos
+el riesgo de elegir uno inadecuado. Puede ser útil en
+ocasiones en las que el gradiente descendente nos acerque a
+un mínimo local pero no sea capaz de hallarlo con precisión.
 \end{document}
