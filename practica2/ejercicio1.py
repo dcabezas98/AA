@@ -69,5 +69,55 @@ plt.show()
 input("\n--- Pulsar tecla para continuar ---\n")
 
 
+# 2 Generar nube de puntos y etiquetarlos con una recta
+
+print('Ejercicio 2\n')
+print('Nube de puntos etiquetados con el signo de la distancia a una recta')
+
+x = x_a
+
+a, b = simula_recta([-50,+50])
+
+# Función para etiquetar
+def f(x,y):
+    return y-a*x-b
+
+label = np.sign(f(x[:,0],x[:,1]))
+
+# a) Dibujar gráfica
+
+x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
+plt.scatter(x1[:,0],x1[:,1],c='b',label='label=+1')
+x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
+plt.scatter(x2[:,0],x2[:,1],c='r',label='label=-1') # Muestra etiquetada
+r = np.linspace(-50, 50, 50)
+plt.plot(r, a*r+b, c='g', label='y='+str(a)[:6]+'x+'+str(b)[:6]) # Recta
+plt.legend(loc='lower right')
+plt.title('Muestra con etiquetas y recta')
+plt.show()
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+# b) Introducir ruido en el 10% de las etiquetas
+
+noisy=np.random.randint(len(label), size=int(len(label)*0.1))
+for i in noisy:
+	label[i]=-label[i]
+
+# Dibujo nueva gráfica (con ruido)
+
+print("Muestra con ruido y recta")
+
+x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
+plt.scatter(x1[:,0],x1[:,1],c='b',label='label=+1')
+x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
+plt.scatter(x2[:,0],x2[:,1],c='r',label='label=-1') # Muestra etiquetada
+r = np.linspace(-50, 50, 50)
+plt.plot(r, a*r+b, c='g', label='y='+str(a)[:6]+'x+'+str(b)[:6]) # Recta
+plt.legend(loc='lower right')
+plt.title('Muestra con etiquetas (con ruido) y recta')
+plt.show()
+
+input("\n--- Pulsar tecla para continuar ---\n")
 
 input("\n--- Pulsar tecla para salir ---\n")
