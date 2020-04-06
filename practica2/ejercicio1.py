@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 
 
 # Fijamos la semilla
@@ -19,7 +20,6 @@ def simula_gaus(N, dim, sigma):
         out[i,:] = np.random.normal(loc=media, scale=np.sqrt(sigma), size=dim)
         
     return out
-
 
 def simula_recta(intervalo):
     points = np.random.uniform(intervalo[0], intervalo[1], size=(2, 2))
@@ -43,16 +43,19 @@ print('EJERCICIO SOBRE LA COMPLEJIDAD DE H Y EL RUIDO\n')
 print('Ejercicio 1')
 print('Generación de nubes de puntos\n')
 
+def pintarMuestra(x, ax, title): # Para pintar las muestras generadas
+    plt.scatter(x[:,0],x[:,1])
+    plt.axis(ax)
+    plt.title(title)
+    plt.show()
+
 # a) N=50, dim=2, rango=[-50,+50] con simula_unif
 
 print('a) Muestra uniforme en [-50,50]x[-50,50]')
 
 x_a = simula_unif(50,2,(-50,50))
 
-plt.scatter(x_a[:,0],x_a[:,1]) # Pintar puntos
-plt.title('Muestra uniforme')
-#plt.axis([-50, 50, -50, 50])
-plt.show()
+pintarMuestra(x_a, [-50,50,-50,50], 'Muestra uniforme')
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -62,9 +65,7 @@ print('b) Muestra normal N( (0,0), (sqrt(5), sqrt(7)) )')
 
 x_b = simula_gaus(50, 2, [5,7])
 
-plt.scatter(x_b[:,0],x_b[:,1]) # Pintar puntos
-plt.title('Muestra normal')
-plt.show()
+pintarMuestra(x_b, [-50, 50, -50, 50], 'Muestra normal')
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -74,49 +75,61 @@ input("\n--- Pulsar tecla para continuar ---\n")
 print('Ejercicio 2\n')
 print('Nube de puntos etiquetados con el signo de la distancia a una recta')
 
-x = x_a
+x=simula_unif(500, 2, (-50,50))
 
 a, b = simula_recta([-50,+50])
-
 # Función para etiquetar
-def f(x,y):
+def f(x,y): # Recta y=ax+b
     return y-a*x-b
-
-label = np.sign(f(x[:,0],x[:,1]))
 
 # a) Dibujar gráfica
 
-x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
-plt.scatter(x1[:,0],x1[:,1],c='b',label='label=+1')
-x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
-plt.scatter(x2[:,0],x2[:,1],c='r',label='label=-1') # Muestra etiquetada
-r = np.linspace(-50, 50, 50)
-plt.plot(r, a*r+b, c='g', label='y='+str(a)[:6]+'x+'+str(b)[:6]) # Recta
-plt.legend(loc='lower right')
-plt.title('Muestra con etiquetas y recta')
-plt.show()
+# Pinta la muestra con etiquetas por la función parámetro
+# Junto con la función: (x,y) con f(x,y)=0
+# Permite añadir ruido (para apartado b)
+def pintarMuestraEtiquetada(x, ax, fun, fun_str, noise=False):
+
+    label = np.sign(f(x[:,0],x[:,1]))
+
+    noise_str=' '
+    if noise: # Para introducir ruido del 10% en cada clase
+        noise_str=' con ruido '
+        label1=np.array([i for i in range(len(label)) if label[i]==+1]) # Índices de las etiquetas positivas
+        noisy1=np.random.randint(len(label1), size=int(len(label1)*0.1)) # Cojo el 10% de ellos
+        for i in noisy1:
+	        label[label1[i]]=-label[label1[i]] # Cambio el signo de las etiquetas correspondientes
+
+        label2=np.array([i for i in range(len(label)) if label[i]==-1]) # Índices de las etiquetas negativas
+        noisy2=np.random.randint(len(label2), size=int(len(label2)*0.1)) # Cojo el 10% de ellos
+        for i in noisy2:
+	        label[label2[i]]=-label[label2[i]] # Cambio el signo de las etiquetas correspondientes
+
+    x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
+    sc1=plt.scatter(x1[:,0],x1[:,1],c='b',label='label=+1')
+    x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
+    sc2=plt.scatter(x2[:,0],x2[:,1],c='r',label='label=-1')
+
+    xrange = np.arange(ax[0], ax[1], 0.05)
+    yrange = np.arange(ax[2], ax[3], 0.05)
+    X, Y = np.meshgrid(xrange, yrange)
+    F=fun(X,Y)
+    plt.contour(X,Y,F,[0],colors='g')
+    line_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='g', marker = '_')
+    
+    plt.legend([sc1,sc2,line_proxy], [sc1.get_label(),sc2.get_label(), 'f(x,y)=0'], numpoints = 1)
+    plt.title('Muestra con etiquetas'+noise_str+'\ny función etiquetadora: f(x,y)='+fun_str)
+    plt.axis(ax)
+    plt.show()
+
+pintarMuestraEtiquetada(x, [-50,50,-50,50], f, 'y='+str(a)[:6]+'x+'+str(b)[:6])
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
-# b) Introducir ruido en el 10% de las etiquetas
+# b) Introducir ruido en el 10% de las etiquetas de cada clase
 
-noisy=np.random.randint(len(label), size=int(len(label)*0.1))
-for i in noisy:
-	label[i]=-label[i]
+pintarMuestraEtiquetada(x, [-50,50,-50,50], f, 'y='+str(a)[:6]+'x+'+str(b)[:6], True) # Dibujo nueva gráfica (con ruido)
 
-# Dibujo nueva gráfica (con ruido)
-
-print("Muestra con ruido y recta")
-
-x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
-plt.scatter(x1[:,0],x1[:,1],c='b',label='label=+1')
-x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
-plt.scatter(x2[:,0],x2[:,1],c='r',label='label=-1') # Muestra etiquetada
-r = np.linspace(-50, 50, 50)
-plt.plot(r, a*r+b, c='g', label='y='+str(a)[:6]+'x+'+str(b)[:6]) # Recta
-plt.legend(loc='lower right')
-plt.title('Muestra con etiquetas (con ruido) y recta')
-plt.show()
+# 3
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
