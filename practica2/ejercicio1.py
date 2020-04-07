@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+# David Cabezas Berrido
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -33,6 +36,43 @@ def simula_recta(intervalo):
     
     return a, b
 
+
+# Pinta la muestra con etiquetas por la función parámetro
+# Junto con la función: (x,y) con f(x,y)=0
+# Permite añadir ruido (para apartado b)
+def pintarMuestraEtiquetadaFun(x, ax, fun, fun_str, noise=False):
+
+    label = np.sign(f(x[:,0],x[:,1]))
+
+    noise_str=' '
+    if noise: # Para introducir ruido del 10% en cada clase
+        noise_str=' con ruido '
+        label1=np.array([i for i in range(len(label)) if label[i]==+1]) # Índices de las etiquetas positivas
+        noisy1=np.random.randint(len(label1), size=int(len(label1)*0.1)) # Cojo el 10% de ellos
+        for i in noisy1:
+	        label[label1[i]]=-label[label1[i]] # Cambio el signo de las etiquetas correspondientes
+
+        label2=np.array([i for i in range(len(label)) if label[i]==-1]) # Índices de las etiquetas negativas
+        noisy2=np.random.randint(len(label2), size=int(len(label2)*0.1)) # Cojo el 10% de ellos
+        for i in noisy2:
+	        label[label2[i]]=-label[label2[i]] # Cambio el signo de las etiquetas correspondientes
+
+    x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
+    sc1=plt.scatter(x1[:,0],x1[:,1],c='r',label='label=+1')
+    x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
+    sc2=plt.scatter(x2[:,0],x2[:,1],c='b',label='label=-1')
+
+    x_range = np.arange(ax[0], ax[1], 0.05)
+    y_range = np.arange(ax[2], ax[3], 0.05)
+    X, Y = np.meshgrid(x_range, y_range)
+    F=fun(X,Y)
+    plt.contour(X,Y,F,[0],colors='g')
+    line_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='g', marker = '_')
+    
+    plt.legend([sc1,sc2,line_proxy], [sc1.get_label(),sc2.get_label(), 'f(x,y)=0'], numpoints = 1)
+    plt.title('Muestra con etiquetas'+noise_str+'\ny función etiquetadora: f(x,y)='+fun_str)
+    plt.axis(ax)
+    plt.show()
 
 # -------- EJERCICIO SOBRE LA COMPLEJIDAD DE H Y EL RUIDO -------- #
 
@@ -75,7 +115,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 print('Ejercicio 2\n')
 print('Nube de puntos etiquetados con el signo de la distancia a una recta')
 
-x=simula_unif(500, 2, (-50,50))
+x=simula_unif(200, 2, (-50,50))
 
 a, b = simula_recta([-50,+50])
 # Función para etiquetar
@@ -84,53 +124,14 @@ def f(x,y): # Recta y=ax+b
 
 # a) Dibujar gráfica
 
-# Pinta la muestra con etiquetas por la función parámetro
-# Junto con la función: (x,y) con f(x,y)=0
-# Permite añadir ruido (para apartado b)
-def pintarMuestraEtiquetada(x, ax, fun, fun_str, noise=False):
-
-    label = np.sign(f(x[:,0],x[:,1]))
-
-    noise_str=' '
-    if noise: # Para introducir ruido del 10% en cada clase
-        noise_str=' con ruido '
-        label1=np.array([i for i in range(len(label)) if label[i]==+1]) # Índices de las etiquetas positivas
-        noisy1=np.random.randint(len(label1), size=int(len(label1)*0.1)) # Cojo el 10% de ellos
-        for i in noisy1:
-	        label[label1[i]]=-label[label1[i]] # Cambio el signo de las etiquetas correspondientes
-
-        label2=np.array([i for i in range(len(label)) if label[i]==-1]) # Índices de las etiquetas negativas
-        noisy2=np.random.randint(len(label2), size=int(len(label2)*0.1)) # Cojo el 10% de ellos
-        for i in noisy2:
-	        label[label2[i]]=-label[label2[i]] # Cambio el signo de las etiquetas correspondientes
-
-    x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
-    sc1=plt.scatter(x1[:,0],x1[:,1],c='b',label='label=+1')
-    x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
-    sc2=plt.scatter(x2[:,0],x2[:,1],c='r',label='label=-1')
-
-    xrange = np.arange(ax[0], ax[1], 0.05)
-    yrange = np.arange(ax[2], ax[3], 0.05)
-    X, Y = np.meshgrid(xrange, yrange)
-    F=fun(X,Y)
-    plt.contour(X,Y,F,[0],colors='g')
-    line_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='g', marker = '_')
-    
-    plt.legend([sc1,sc2,line_proxy], [sc1.get_label(),sc2.get_label(), 'f(x,y)=0'], numpoints = 1)
-    plt.title('Muestra con etiquetas'+noise_str+'\ny función etiquetadora: f(x,y)='+fun_str)
-    plt.axis(ax)
-    plt.show()
-
-pintarMuestraEtiquetada(x, [-50,50,-50,50], f, 'y='+str(a)[:6]+'x+'+str(b)[:6])
+pintarMuestraEtiquetadaFun(x, [-50,50,-50,50], f, 'y'+('{0:+}'.format(-a))[:8]+'x'+('{0:+}'.format(-b))[:8])
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
 # b) Introducir ruido en el 10% de las etiquetas de cada clase
 
-pintarMuestraEtiquetada(x, [-50,50,-50,50], f, 'y='+str(a)[:6]+'x+'+str(b)[:6], True) # Dibujo nueva gráfica (con ruido)
+pintarMuestraEtiquetadaFun(x, [-50,50,-50,50], f, 'y'+('{0:+}'.format(-a))[:8]+'x'+('{0:+}'.format(-b))[:8], True) # Dibujo nueva gráfica (con ruido)
 
 # 3
-
-input("\n--- Pulsar tecla para continuar ---\n")
 
 input("\n--- Pulsar tecla para salir ---\n")
