@@ -229,3 +229,5 @@ test_label=np.sign(h(test_data[:,1],test_data[:,2]))
 
 print('Estimación del error fuera del conjunto de entrenamiento')
 print('Eout=', Error(w,test_data, test_label))
+
+input("\n--- Pulsar tecla para salir ---\n")
