@@ -4,10 +4,11 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 import matplotlib
 
 
-# Fijamos la semilla
+# Fijamos la semilla, la volveré a fijar en algunas ocasiones
 np.random.seed(1)
 
 
@@ -37,40 +38,52 @@ def simula_recta(intervalo):
     return a, b
 
 
-# Pinta la muestra con etiquetas por la función parámetro
-# Junto con la función: (x,y) con f(x,y)=0
-# Permite añadir ruido (para apartado b)
-def pintarMuestraEtiquetadaFun(x, ax, fun, fun_str, noise=False):
+# Etiqueta una muestra usando el signo de una función f
+# A cada (x,y) le asigna el signo de f(x,y)
+# Permite añadir ruido del 10%
+def etiquetaMuestraFun(x, fun, noise=False):
+    
+    label = np.sign(fun(x[:,0],x[:,1])) # Etiqueta la muestra
 
-    label = np.sign(f(x[:,0],x[:,1]))
-
-    noise_str=' '
     if noise: # Para introducir ruido del 10% en cada clase
-        noise_str=' con ruido '
         label1=np.array([i for i in range(len(label)) if label[i]==+1]) # Índices de las etiquetas positivas
-        noisy1=np.random.randint(len(label1), size=int(len(label1)*0.1)) # Cojo el 10% de ellos
-        for i in noisy1:
-	        label[label1[i]]=-label[label1[i]] # Cambio el signo de las etiquetas correspondientes
-
+        noisy1=np.random.randint(len(label1), size=int(np.round(len(label1)*0.1))) # Cojo el 10% de ellos
         label2=np.array([i for i in range(len(label)) if label[i]==-1]) # Índices de las etiquetas negativas
-        noisy2=np.random.randint(len(label2), size=int(len(label2)*0.1)) # Cojo el 10% de ellos
+        noisy2=np.random.randint(len(label2), size=int(np.round(len(label2)*0.1))) # Cojo el 10% de ellos
+        for i in noisy1:
+	        label[label1[i]]=-label[label1[i]] # Cambio el signo de las etiquetas positivas
         for i in noisy2:
-	        label[label2[i]]=-label[label2[i]] # Cambio el signo de las etiquetas correspondientes
+	        label[label2[i]]=-label[label2[i]] # Cambio el signo de las etiquetas negativas
 
-    x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
-    sc1=plt.scatter(x1[:,0],x1[:,1],c='r',label='label=+1')
-    x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
-    sc2=plt.scatter(x2[:,0],x2[:,1],c='b',label='label=-1')
+    return label
+
+# Pinta la muestra etiquetada
+# Junto con la función: (x,y) con f(x,y)=0
+def pintarMuestraEtiquetadaFun(x, label, ax, fun, title):
+
+    # Pinto la función y las regiones que divide
+    cm = ListedColormap(['skyblue','lightsalmon'])
 
     x_range = np.arange(ax[0], ax[1], 0.05)
     y_range = np.arange(ax[2], ax[3], 0.05)
     X, Y = np.meshgrid(x_range, y_range)
     F=fun(X,Y)
     plt.contour(X,Y,F,[0],colors='g')
+    plt.contourf(X,Y,F,0,cmap=cm,alpha=0.4)
+
+    # Pinto muestra etiquetada
+    x1 = np.array([xi for i, xi in enumerate(x) if label[i]==1])
+    sc1=plt.scatter(x1[:,0],x1[:,1],c='r',label='label=+1',alpha=0.75)
+    x2 = np.array([xi for i, xi in enumerate(x) if label[i]==-1])
+    sc2=plt.scatter(x2[:,0],x2[:,1],c='b',label='label=-1',alpha=0.75)
+
+    # Para la leyenda
     line_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='g', marker = '_')
+    pos_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='lightsalmon', marker = 's')
+    neg_proxy = matplotlib.lines.Line2D([0],[0], linestyle="none", c='skyblue', marker = 's')
     
-    plt.legend([sc1,sc2,line_proxy], [sc1.get_label(),sc2.get_label(), 'f(x,y)=0'], numpoints = 1)
-    plt.title('Muestra con etiquetas'+noise_str+'\ny función etiquetadora: f(x,y)='+fun_str)
+    plt.legend([sc1,sc2,line_proxy, pos_proxy, neg_proxy], [sc1.get_label(),sc2.get_label(), 'f(x,y)=0','f(x,y)>0','f(x,y)<0'], numpoints = 1,framealpha=0.5)
+    plt.title(title)
     plt.axis(ax)
     plt.show()
 
@@ -115,7 +128,9 @@ input("\n--- Pulsar tecla para continuar ---\n")
 print('Ejercicio 2\n')
 print('Nube de puntos etiquetados con el signo de la distancia a una recta')
 
-x=simula_unif(200, 2, (-50,50))
+# Vuelvo a inicializar la semilla puesto que tengo que generar la misma muestra en el la sección 2
+np.random.seed(2) 
+x=simula_unif(100, 2, (-50,50))
 
 a, b = simula_recta([-50,+50])
 # Función para etiquetar
@@ -124,14 +139,56 @@ def f(x,y): # Recta y=ax+b
 
 # a) Dibujar gráfica
 
-pintarMuestraEtiquetadaFun(x, [-50,50,-50,50], f, 'y'+('{0:+}'.format(-a))[:8]+'x'+('{0:+}'.format(-b))[:8])
+label=etiquetaMuestraFun(x, f) # Asigno etiquetas
+
+fun_str='y'+('{0:+}'.format(-a))[:8]+'x'+('{0:+}'.format(-b))[:8]
+
+# Dibujo la muestra junto a la recta
+pintarMuestraEtiquetadaFun(x, label, [-50,50,-50,50], f, 'Muestra con etiquetas\ny función etiquetadora: f(x,y)='+fun_str)
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
 # b) Introducir ruido en el 10% de las etiquetas de cada clase
+print('Ahora con ruido\n')
 
-pintarMuestraEtiquetadaFun(x, [-50,50,-50,50], f, 'y'+('{0:+}'.format(-a))[:8]+'x'+('{0:+}'.format(-b))[:8], True) # Dibujo nueva gráfica (con ruido)
+label_n=etiquetaMuestraFun(x, f, True) # Asigno etiquetas con ruido
 
-# 3
+fun_str='y'+('{0:+}'.format(-a))[:8]+'x'+('{0:+}'.format(-b))[:8]
+
+fails=((label_n-label)!=0).sum() # Mido los fallos que comete (rondarán el 10%)
+print('Función: f(x,y)='+fun_str)
+print('Proporción de puntos mal clasificados:',fails/len(x))
+
+# Dibujo la muestra junto a la recta
+pintarMuestraEtiquetadaFun(x, label_n, [-50,50,-50,50], f, 'Muestra con etiquetas con ruido\ny función etiquetadora: f(x,y)='+fun_str)
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+# 3 Muestra anterior junto con otras funciones
+
+print('Ejercicio 3\n')
+print('Muestra anterior junto con otras funciones más complejas\n')
+
+# Funciones que voy a probar
+def f1(x,y):
+    return (x-10)**2+(y-20)**2-400
+def f2(x,y):
+    return 0.5*(x+10)**2+(y-20)**2-400
+def f3(x,y):
+    return 0.5*(x-10)**2-(y+20)**2-400
+def f4(x,y):
+    return y-20*x**2-5*x+3
+
+fun=[f1,f2,f3,f4]
+fun_str=['(x-10)^2+(y-20)^2-400','0.5(x+10)^2+(y-20)^2-400','0.5(x-10)^2-(y+20)^2-400','y-20x^2-5x+3']
+
+for i in range(len(fun)):
+    labelf=etiquetaMuestraFun(x,fun[i]) # Mido los fallos de cada una
+    fails=((label_n-labelf)!=0).sum()
+    print('Función: f(x,y)='+fun_str[i])
+    print('Proporción de puntos mal clasificados:',fails/len(x))
+    pintarMuestraEtiquetadaFun(x, label_n, [-50,50,-50,50], fun[i], 'Muestra con etiquetas con ruido\ny función: f(x,y)='+fun_str[i])
+    input("\n--- Pulsar tecla para continuar ---\n")
+
 
 input("\n--- Pulsar tecla para salir ---\n")
