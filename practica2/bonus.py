@@ -30,7 +30,6 @@ def readData(file_x, file_y):
 	
 	return x, y
 
-
 # Pinta una muestra etiquetada junto con una recta
 def pintarMuestraRecta(x, label, w, title):
 
@@ -54,13 +53,11 @@ def pintarMuestraRecta(x, label, w, title):
     plt.axis([minx,maxx,miny,maxy])
     plt.show()
 
-
 # Algoritmo pseudoinversa	
 def pseudoinverse(x, y):
 	x_pinv=np.linalg.pinv(x)
 	w=np.dot(x_pinv,y)
 	return w
-
 
 # Error de clasificación proporción de elementos mal clasificados
 def Eclass(w,x,y):
@@ -101,9 +98,9 @@ print('w=',w)
 pintarMuestraRecta(x, y, w, 'Datos de entrenamiento junto con solución obtenida\ncon Regresión Lineal mediante pseudoinversa')
 pintarMuestraRecta(x_test, y_test, w, 'Datos de test junto con solución obtenida\ncon Regresión Lineal mediante pseudoinversa')
 
-print('\nErrores obtenidos:')
-print('E_in =',Eclass(w,x,y))
-print('E_test =',Eclass(w,x_test,y_test))
+print('Errores obtenidos:')
+print('E_in =',Eclass(w,x,y),'\t(N = '+str(len(x))+' datos)')
+print('E_test =',Eclass(w,x_test,y_test),'\t(N = '+str(len(x_test))+' datos)')
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -118,7 +115,7 @@ pintarMuestraRecta(x, y, w, 'Datos de entrenamiento junto con solución obtenida
 pintarMuestraRecta(x_test, y_test, w, 'Datos de test junto con solución obtenida\nmediante el algoritmo PLA-Pocket')
 
 print('Errores obtenidos:')
-print('E_in =',Eclass(w,x,y))
-print('E_test =',Eclass(w,x_test,y_test))
+print('E_in =',Eclass(w,x,y),'\t(N = '+str(len(x))+' datos)')
+print('E_test =',Eclass(w,x_test,y_test),'\t(N = '+str(len(x_test))+' datos)')
 
 input("\n--- Pulsar tecla para salir ---\n")

@@ -1,6 +1,6 @@
 \documentclass[a4]{article}
 
-\usepackage[left=3cm,right=3cm,top=2cm,bottom=2cm]{geometry} 
+\usepackage[left=2.5cm,right=2.5cm,top=2cm,bottom=2cm]{geometry} 
 
 \usepackage[utf8]{inputenc}   % otra alternativa para los caracteres acentuados y la "Ã±"
 \usepackage[           spanish % para poder usar el espaÃ±ol
@@ -62,12 +62,12 @@ debido a que tiene menor varianza, pero apenas se aprecia.
 \vspace{-3mm}
 \begin{figure}[H]
     \centering
-    \subfigure[$U\big((-50,50)\times(-50,50)\big)$]{\includegraphics[width=77mm]{imgs/uniform.png}}
-    \subfigure[$N\big((0,0),(\sqrt{5},\sqrt{7})\big)$]{\includegraphics[width=77mm]{imgs/normal.png}}
+    \subfigure[$U\big((-50,50)\times(-50,50)\big)$]{\includegraphics[width=80mm]{imgs/uniform.png}}
+    \subfigure[$N\big((0,0),(\sqrt{5},\sqrt{7})\big)$]{\includegraphics[width=80mm]{imgs/normal.png}}
     \caption{Muestras uniforme y normal}
     \label{fig:uniform-normal}
 \end{figure}
-\vspace{-4mm}
+\vspace{-6mm}
 
 \subsection{Muestra etiquetada por una recta}
 
@@ -82,10 +82,12 @@ Obviamente la recta clasifica a la perfección todos los puntos.
 A continuación, he añadido ruido a las etiquetas de la muestra
 (10\% en cada clase). Claramente la recta tiene un 10\% de puntos mal clasificados ahora.
 
+\vspace{-2mm}
+
 \begin{figure}[H]
     \centering
-    \subfigure[Muestra sin ruido]{\includegraphics[width=77mm]{imgs/x-f.png}}
-    \subfigure[Muestra con ruido]{\includegraphics[width=77mm]{imgs/x-f_noise.png}}
+    \subfigure[Muestra sin ruido]{\includegraphics[width=80mm]{imgs/x-f.png}}
+    \subfigure[Muestra con ruido]{\includegraphics[width=80mm]{imgs/x-f_noise.png}}
     \caption{Muestra y recta etiquetadora}
     \label{fig:muestra-ruido}
 \end{figure}
@@ -105,11 +107,11 @@ Incluyo también el porcentaje de puntos mal clasificados para cada función.
 \begin{figure}[H]
     \centering
     
-    \subfigure[$f(x,y)=(x-10)^2+(y-20)^2-400$;\ \ Error: 58\%]{\includegraphics[width=77mm]{imgs/x-f1_noise.png}}
-    \subfigure[$f(x,y)=0.5(x+10)^2+(y-20)^2-400$;\ \ Error: 68\%]{\includegraphics[width=77mm]{imgs/x-f2_noise.png}}
+    \subfigure[$f(x,y)=(x-10)^2+(y-20)^2-400$;\ \ Error: 58\%]{\includegraphics[width=82mm]{imgs/x-f1_noise.png}}
+    \subfigure[$f(x,y)=0.5(x+10)^2+(y-20)^2-400$;\ \ Error: 68\%]{\includegraphics[width=82mm]{imgs/x-f2_noise.png}}
     
-    \subfigure[$f(x,y)=0.5(x-10)^2-(y+20)^2-400$;\ \ Error: 35\%]{\includegraphics[width=77mm]{imgs/x-f3_noise.png}}
-    \subfigure[$f(x,y)=y-20x^2-5x+3$;\ \ Error: 47\%]{\includegraphics[width=77mm]{imgs/x-f4_noise.png}}
+    \subfigure[$f(x,y)=0.5(x-10)^2-(y+20)^2-400$;\ \ Error: 35\%]{\includegraphics[width=82mm]{imgs/x-f3_noise.png}}
+    \subfigure[$f(x,y)=y-20x^2-5x+3$;\ \ Error: 47\%]{\includegraphics[width=82mm]{imgs/x-f4_noise.png}}
     
     \caption{Muestra con otras funciones como delimitadores}
     \label{fig:muestra-otras}
@@ -134,5 +136,47 @@ Pero en la muestra con ruido, esto puede no ocurrir, es probable
 que el valor que se obtenga para $a$ al ajustar la muestra con
 ruido no sea cercano a 0, lo que ajustaría mejor la muestra (con ruido)
 pero se alejaría de la función objetivo, dando lugar a sobreajuste.
+
+
+\section{Bonus: Clasificación de dígitos}
+
+%%%% Describir problema de clasificación binaria
+
+Primero he ajustado un modelo de Regresión Lineal, usando el algoritmo
+de la pseudoinversa. \\ He obtenido los pesos $w= [-0.50676351,  8.25119739,  0.44464113]$
+ y los errores de clasificación (proporción de puntos mal clasificados) $E_{in}=0.22780569514237856$ y $E_{test} = 0.25136612021857924$.
+
+\begin{figure}[H]
+    \centering
+    \subfigure[Resultado regresión junto con datos de entrenamiento]{\includegraphics[width=82mm]{imgs/lin-regress.png}}
+    \subfigure[Resultado regresión junto con datos de test]{\includegraphics[width=82mm]{imgs/lin-regress_test.png}}
+    \caption{Recta obtenida por Regresión Lineal con pseudoinversa}
+    \label{fig:lin-regress}
+\end{figure}
+\vspace{-3mm}
+
+A continuación, he utilizado esa solución como valor inicial para
+el algoritmo PLA-Pocket con 100 etapas, he obtenido los pesos $w= [-6.50676351, 94.33278003, 4.88432863]$
+y los errores de clasificación (proporción de puntos mal clasificados)
+$E_{in} = 0.22529313232830822$ y $E_{test} = 0.2540983606557377$.
+
+\begin{figure}[H]
+    \centering
+    \subfigure[Resultado PLA-Pocket junto con datos de entrenamiento]{\includegraphics[width=82mm]{imgs/PLA-pocket.png}}
+    \subfigure[Resultado PLA-Pocket junto con datos de test]{\includegraphics[width=82mm]{imgs/PLA-pocket_test.png}}
+    \caption{Recta obtenida con PLA-Pocket}
+    \label{fig:lin-regress}
+\end{figure}
+\vspace{-3mm}
+
+Obviamente en PLA-Pocket $E_{in}$ no puede empeorar respecto al inicial,
+he obtenido un $E_{in}$ ligeramente más bajo y $E_{test}$ ligeramente más alto 
+al aplicar la mejora de PLA-Pocket.
+
+Utilizando la fórmula
+\[E_{out}(h)\leq E_{in}(h)+\sqrt{\frac{1}{2N}\log{\frac{2}{\delta}}}\qquad\text{con probabilidad}\geq 1-\delta\]
+puedo calcular una cota para $E_{out}$ basada en $E_{in}$ con tolerancia $0.05$.
+En el conjunto de entrenamiento $N=1194$. Luego puedo asegurar con probabilidad mayor o igual que 0.95 que
+\[E_{out}\leq 0.22529313232830822 + \sqrt{\frac{1}{2388}\log{\frac{2}{\delta}}}=0.22529313232830822+0.0393033954=0.2645965277\]
 
 \end{document}
