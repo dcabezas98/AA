@@ -6,8 +6,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Fijamos la semilla
-np.random.seed(1)
+np.random.seed(2) # Para generar la misma muestra que en el ejercicio 1
 
+# Etiqueta una muestra usando el signo de una función f
+# A cada (x,y) le asigna el signo de f(x,y)
+# Permite añadir ruido del 10%
+def etiquetaMuestraFun(x, fun, noise=False):
+    
+    label = np.sign(fun(x[:,0],x[:,1])) # Etiqueta la muestra
+
+    if noise: # Para introducir ruido del 10% en cada clase
+        label1=np.array([i for i in range(len(label)) if label[i]==+1]) # Índices de las etiquetas positivas
+        noisy1=np.random.randint(len(label1), size=int(np.round(len(label1)*0.1))) # Cojo el 10% de ellos
+        label2=np.array([i for i in range(len(label)) if label[i]==-1]) # Índices de las etiquetas negativas
+        noisy2=np.random.randint(len(label2), size=int(np.round(len(label2)*0.1))) # Cojo el 10% de ellos
+        for i in noisy1:
+	        label[label1[i]]=-label[label1[i]] # Cambio el signo de las etiquetas positivas
+        for i in noisy2:
+	        label[label2[i]]=-label[label2[i]] # Cambio el signo de las etiquetas negativas
+
+    return label
 
 def simula_unif(N, dim, rango):
 	return np.random.uniform(rango[0],rango[1],(N,dim))
@@ -50,7 +68,7 @@ print('MODELOS LINEALES\n')
 print('Ejercicio 1\nAlgoritmo Perceptron\n')
 
 # Genero la muestra
-x=simula_unif(200, 2, (-50,50))
+x=simula_unif(100, 2, (-50,50))
 # Añado x_0=1
 x=np.hstack((np.ones((len(x),1)),x)) # Le añado el 1 al vector de características
 
@@ -60,7 +78,14 @@ def f(x,y): # Recta y=ax+b
     return y-a*x-b
 
 # Etiquetas
-label = np.sign(f(x[:,1],x[:,2]))
+label = etiquetaMuestraFun(x[:,1:],f)
+
+# Muestra con ruido también la misma de la sección anterior
+label_n = etiquetaMuestraFun(x[:,1:],f,True)
+
+# Para comprobar que son correctas
+# pintarMuestraRecta(x,[-50,50,-50,50], label, [-b,-a,1],'')
+# pintarMuestraRecta(x,[-50,50,-50,50], label_n, [-b,-a,1],'')
 
 # Algoritmo Perceptron
 def PLA(datos, label, max_iter, vini):
@@ -90,7 +115,7 @@ def  pruebaPLA(x, label):
     print('Iteraciones necesarias:', it)
 
     input("\n--- Pulsar tecla para continuar ---\n")
-    pintarMuestraRecta(x, [-50,50,-50,50], label, w, 'Muestra con etiquetas y solución del PLA') # Pinto la solución obtenida
+    pintarMuestraRecta(x, [-50,50,-50,50], label, w, 'Muestra con etiquetas y solución del PLA partiendo de w=(0,0,0)') # Pinto la solución obtenida
 
     it_media = 0
     print("Repitiendo 10 veces: \n ... \n")
@@ -111,23 +136,12 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 # b) Con datos no separables
 
-# Indroduzco ruido en la muestra
-label1=np.array([i for i in range(len(label)) if label[i]==+1]) # Índices de las etiquetas positivas
-noisy1=np.random.randint(len(label1), size=int(len(label1)*0.1)) # Cojo el 10% de ellos
-for i in noisy1:
-    label[label1[i]]=-label[label1[i]] # Cambio el signo de las etiquetas correspondientes
-
-label2=np.array([i for i in range(len(label)) if label[i]==-1]) # Índices de las etiquetas negativas
-noisy2=np.random.randint(len(label2), size=int(len(label2)*0.1)) # Cojo el 10% de ellos
-for i in noisy2:
-    label[label2[i]]=-label[label2[i]] # Cambio el signo de las etiquetas correspondientes
-
 vini = np.zeros(x.shape[1]) # Partiendo del vector 0
 w, it = PLA(x,label,500,vini)
 
 print('Datos no separables:\n')
 
-pruebaPLA(x, label)
+pruebaPLA(x, label_n)
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -135,6 +149,8 @@ input("\n--- Pulsar tecla para continuar ---\n")
 # Ejercicio 2: regresión logística
 
 print('Ejercicio 2\nRegresión Logística\n')
+
+np.random.seed(9)
 
 # Muestra de 100 puntos de [0,2]x[0,2]
 x=simula_unif(100,2,[0,2])
@@ -148,7 +164,7 @@ def h(x,y): # Función etiquetadora
     return np.sign(y-a*x-b)
 
 # Etiquetas
-label = np.sign(h(x[:,1],x[:,2]))
+label = etiquetaMuestraFun(x[:,1:],h)
 
 """
 # Función objetivo: toma valores 0 (para etiqueta = -1) y 1 (para etiqueta = +1), según a que lado de la recta esté el punto (x,y)
@@ -220,7 +236,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 # b) Eout
 
 # Muestra de 1500 puntos de [0,2]x[0,2] para test
-test_data=simula_unif(100,2,[0,2])
+test_data=simula_unif(1500,2,[0,2])
 # Añado x_0=1
 test_data=np.hstack((np.ones((len(test_data),1)),test_data)) # Le añado el 1 al vector de características
 

@@ -1,0 +1,138 @@
+\documentclass[a4]{article}
+
+\usepackage[left=3cm,right=3cm,top=2cm,bottom=2cm]{geometry} 
+
+\usepackage[utf8]{inputenc}   % otra alternativa para los caracteres acentuados y la "Ã±"
+\usepackage[           spanish % para poder usar el espaÃ±ol
+                      ,es-tabla % para los captions de las tablas
+                       ]{babel}   
+\decimalpoint %para usar el punto decimal en vez de coma para los nÃºmeros con decimales
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage{parskip}
+\usepackage{xcolor}
+
+\usepackage{caption}
+
+\usepackage{enumerate} % paquete para poder personalizar fÃ¡cilmente la apariencia de las listas enumerativas
+
+\usepackage{graphicx} % figuras
+\usepackage{subfigure} % subfiguras
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+
+\definecolor{gris}{RGB}{220,220,220}
+	
+\usepackage{float} % para controlar la situaciÃ³n de los entornos flotantes
+
+\restylefloat{figure}
+\restylefloat{table} 
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\author{David Cabezas Berrido}
+\date{\vspace{-5mm}}
+
+\title{\huge Aprendizaje Automático: Práctica 2 \HRule\vspace{-4mm}}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\newpage
+
+\section{Ejercicio sobre la complejidad de H y el ruido}
+
+\subsection{Dibujar nubes de puntos}
+
+Utilizando las funciones \texttt{simula\_unif} y \texttt{simula\_gaus},
+he generado dos muestras en dimensión 2, de tamaño $N=50$. \\
+La primera muestra es una uniforme en el cuadrado
+$[-50,50]\times[-50,50]$ 
+y la segunda muestra es una normal de media $(0,0)$ y varianza $(5,7)$ 
+(desviación típica $(\sqrt{5},\sqrt{7})$). \\
+He mantenido fija la escala de los ejes para que se aprecie que los puntos
+generados por la normal están mucho más concentrados en torno al punto $(0,0)$,
+la concentración es ligeramente mayor en el eje de abscisas 
+debido a que tiene menor varianza, pero apenas se aprecia.
+
+\vspace{-3mm}
+\begin{figure}[H]
+    \centering
+    \subfigure[$U\big((-50,50)\times(-50,50)\big)$]{\includegraphics[width=77mm]{imgs/uniform.png}}
+    \subfigure[$N\big((0,0),(\sqrt{5},\sqrt{7})\big)$]{\includegraphics[width=77mm]{imgs/normal.png}}
+    \caption{Muestras uniforme y normal}
+    \label{fig:uniform-normal}
+\end{figure}
+\vspace{-4mm}
+
+\subsection{Muestra etiquetada por una recta}
+
+He generado (con \texttt{simula\_unif}) una muestra de $N=100$ puntos
+del cuadrado $[-50,50]\times[-50,50]$ y los he etiquetado con
+el signo de la distancia a una recta generada por \texttt{simula\_recta} que corta a dicho cuadrado.
+Esto quiere decir que si la recta es $y=ax+b$, la etiqueta
+de un punto $(x,y)$ es el signo de la función $y-ax-b$ (+1 si el punto 
+queda por encima de la recta y -1 si queda por debajo).
+Obviamente la recta clasifica a la perfección todos los puntos.
+
+A continuación, he añadido ruido a las etiquetas de la muestra
+(10\% en cada clase). Claramente la recta tiene un 10\% de puntos mal clasificados ahora.
+
+\begin{figure}[H]
+    \centering
+    \subfigure[Muestra sin ruido]{\includegraphics[width=77mm]{imgs/x-f.png}}
+    \subfigure[Muestra con ruido]{\includegraphics[width=77mm]{imgs/x-f_noise.png}}
+    \caption{Muestra y recta etiquetadora}
+    \label{fig:muestra-ruido}
+\end{figure}
+
+\subsection{Comparación con otras funciones frontera}
+
+Ahora he representado la misma muestra (con ruido) junto con otras funciones,
+he calculado también el error que cometen dichas funciones funciones a
+la hora de clasificar la muestra.
+
+En la siguiente figura se ve que puntos clasifica bien y mal
+cada función, los bien clasificados son los que están en la región de su color.
+Incluyo también el porcentaje de puntos mal clasificados para cada función.
+
+\vspace{-3mm}
+
+\begin{figure}[H]
+    \centering
+    
+    \subfigure[$f(x,y)=(x-10)^2+(y-20)^2-400$;\ \ Error: 58\%]{\includegraphics[width=77mm]{imgs/x-f1_noise.png}}
+    \subfigure[$f(x,y)=0.5(x+10)^2+(y-20)^2-400$;\ \ Error: 68\%]{\includegraphics[width=77mm]{imgs/x-f2_noise.png}}
+    
+    \subfigure[$f(x,y)=0.5(x-10)^2-(y+20)^2-400$;\ \ Error: 35\%]{\includegraphics[width=77mm]{imgs/x-f3_noise.png}}
+    \subfigure[$f(x,y)=y-20x^2-5x+3$;\ \ Error: 47\%]{\includegraphics[width=77mm]{imgs/x-f4_noise.png}}
+    
+    \caption{Muestra con otras funciones como delimitadores}
+    \label{fig:muestra-otras}
+\end{figure}
+
+\vspace{-3mm}
+
+Ninguna de estas cuatro funciones ha conseguido si quiera acercarse
+al error del 10\% que presentaba la recta. Esto era de esperar,
+ya que la recta la he usado para etiquetar la muestra (salvo ese 10\% de ruido)
+y las funciones estaban prefijadas antes (no han recibido ningún aprendizaje ni ajuste).
+
+Sin embargo, es perfectamente posible que el ruido de la muestra
+provoque que el mejor ajuste no sea la misma recta que usé
+para etiquetarla, en este caso se puede producir sobreajuste
+si la clase H es lo suficientemente compleja como para ajustar el
+ruido.
+
+Por ejemplo, si ajustase la muestra sin ruido mediante
+una parábola $y=ax^2+bx+c$ el peso $a$ obtendría un valor muy cercano a 0.
+Pero en la muestra con ruido, esto puede no ocurrir, es probable
+que el valor que se obtenga para $a$ al ajustar la muestra con
+ruido no sea cercano a 0, lo que ajustaría mejor la muestra (con ruido)
+pero se alejaría de la función objetivo, dando lugar a sobreajuste.
+
+\end{document}

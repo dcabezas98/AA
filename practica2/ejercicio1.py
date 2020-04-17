@@ -128,7 +128,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 print('Ejercicio 2\n')
 print('Nube de puntos etiquetados con el signo de la distancia a una recta')
 
-# Vuelvo a inicializar la semilla puesto que tengo que generar la misma muestra en el la sección 2
+# Vuelvo a fijar la semilla puesto que tengo que generar la misma muestra en el la sección 2
 np.random.seed(2) 
 x=simula_unif(100, 2, (-50,50))
 
