@@ -137,6 +137,64 @@ que el valor que se obtenga para $a$ al ajustar la muestra con
 ruido no sea cercano a 0, lo que ajustaría mejor la muestra (con ruido)
 pero se alejaría de la función objetivo, dando lugar a sobreajuste.
 
+\section{Modelos lineales}
+
+\subsection{Algoritmo Perceptron}
+
+\title{\bf \large Caso de muestra separable:}
+
+He ejecutado el algoritmo PLA sobre la muestra etiquetada del 
+ejercicio $2a)$ de la sección anterior y he anotado el número de
+iteraciones necesarias para que el algoritmo converja en 10
+ejecuciones.
+
+Partiendo del vector 0, en las 10 ejecuciones ha necesitado 2
+iteraciones, ya que al partir del mismo punto el comportamiento del
+algoritmo es exactamente el mismo. La solución obtenida ha sido
+$w=[-3,-57.36159336,28.53120771]$.
+
+\vspace{-3mm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=82mm]{imgs/PLA.png}
+    \caption{Recta obtenida con PLA partiendo de pesos nulos (muestra separable)}
+    \label{fig:PLA}
+\end{figure}
+\vspace{-3mm}
+
+Luego he realizado 10 ejecuciones partiendo de vectores de números
+aleatorios en $[0,1]$, las iteraciones necesarias en cada ejecución
+han sido: 2, 3, 3, 2, 3, 2, 3, 2, 3, 3 (media 2.6). Ahora el algoritmo
+ha tenido comportamientos diferentes, ya que ha partido de un $w_{ini}$
+diferente en cada iteración.
+En este caso el número de iteraciones no presenta más que una ligera
+variación respecto al vector inicial, pero con muestras (variando la
+semilla) he obtenido resultados muy variados (tanto mejores como peores),
+luego no podemos concluir nada respecto a la eficiencia del algoritmo.
+
+\title{\bf \large Caso de muestra no separable:}
+
+He realizado el mismo experimento con la muestra etiquetada del
+ejercicio $2b)$ de la sección anterior, que es la misma muestra pero
+con ruido en las etiquetas, este ruido hace que los datos no sean 
+separables y que el algoritmo no converja. He limitado las iteraciones
+a 500 para que pare en algún momento y efectivamente ha agotado las
+500 iteraciones en todos los casos, tanto partiendo del vector cero
+como de vectores de valores aleatorios en $[0,1]$. Partiendo del 
+vector cero, he obtenido la solución $w=[-45,-37.98579548,38.22893039]$.
+
+\vspace{-3mm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=82mm]{imgs/PLA_noise.png}
+    \caption{Recta obtenida con PLA partiendo de pesos nulos (muestra no separable)}
+    \label{fig:PLA}
+\end{figure}
+\vspace{-3mm}
+
+\subsection{Regresión Logística}
+
+
 
 \section{Bonus: Clasificación de dígitos}
 
@@ -173,6 +231,10 @@ Obviamente en PLA-Pocket $E_{in}$ no puede empeorar respecto al inicial,
 he obtenido un $E_{in}$ ligeramente más bajo y $E_{test}$ ligeramente más alto 
 al aplicar la mejora de PLA-Pocket.
 
+
+\end{document}
+
+% REVISAR
 Utilizando la fórmula
 \[E_{out}(h)\leq E_{in}(h)+\sqrt{\frac{1}{2N}\log{\frac{2}{\delta}}}\qquad\text{con probabilidad}\geq 1-\delta\]
 puedo calcular una cota para $E_{out}$ basada en $E_{in}$ con tolerancia $0.05$.

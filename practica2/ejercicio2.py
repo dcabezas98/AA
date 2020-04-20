@@ -108,25 +108,40 @@ print('Datos separables:\n')
 
 def  pruebaPLA(x, label):
     vini = np.zeros(x.shape[1]) # Partiendo del vector 0
-    w, it = PLA(x,label,500,vini)
 
     print('Partiendo del vector cero')
-    print('Solución obtenida:', w)
-    print('Iteraciones necesarias:', it)
+    it_media = 0
+    print('Repitiendo 10 veces: \n ... \n')
+    print('Iteraciones necesarias: ', end='')
+    for _ in range(10):
+        w, it = PLA(x,label,500,vini)
+        print(str(it),end=', ')
+        it_media+=it
 
-    input("\n--- Pulsar tecla para continuar ---\n")
+    it_media/=10
+    
+    print()
+    print('Número medio de iteraciones necesarias:', it_media)
+
+    print('Solución obtenida en la última iteración:', w)
+
     pintarMuestraRecta(x, [-50,50,-50,50], label, w, 'Muestra con etiquetas y solución del PLA partiendo de w=(0,0,0)') # Pinto la solución obtenida
 
+    input("\n--- Pulsar tecla para continuar ---\n")
+
+    print('Partiendo de vectores aleatorios en [0,1]')
     it_media = 0
-    print("Repitiendo 10 veces: \n ... \n")
+    print('Repitiendo 10 veces: \n ... \n')
+    print('Iteraciones necesarias: ', end='')
     for _ in range(10):
         vini = np.random.uniform(0,1,x.shape[1]) # Partiendo de vectores aleatorios en [0,1]
         w, it = PLA(x,label,500,vini)
+        print(str(it),end=', ')
         it_media+=it
 
     it_media/=10
 
-    print('Partiendo de vectores aleatorios en [0,1]')
+    print()
     print('Número medio de iteraciones necesarias:', it_media)
 
 pruebaPLA(x,label)
@@ -135,9 +150,6 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 
 # b) Con datos no separables
-
-vini = np.zeros(x.shape[1]) # Partiendo del vector 0
-w, it = PLA(x,label,500,vini)
 
 print('Datos no separables:\n')
 
@@ -169,7 +181,7 @@ label = etiquetaMuestraFun(x[:,1:],h)
 """
 # Función objetivo: toma valores 0 (para etiqueta = -1) y 1 (para etiqueta = +1), según a que lado de la recta esté el punto (x,y)
 def f(x,y):
-    return (g(x,y)+1)/2
+    return (h(x,y)+1)/2
 """
 
 # Muestra etiquetada y recta que separa las clases
@@ -215,12 +227,12 @@ def rl_sgd(datos, label, lr, max_etapas, wini, diff):
         # Itero sobre los N datos
         for n in range(len(datos)): 
             w=w-lr*grad_e_n(n,w,datos,label)
-        etapa+=1
+        etapa+=1  
     return w
 
 print('Regresión Logística con Gradiente Descendente Estocástico')
 
-w=np.zeros(x.shape[1])
+w=np.zeros(x.shape[1]) # Parto de los pesos a 0
 lr=0.01
 max_etapas=5000 # Para asegurar que pare
 diff=0.01
