@@ -212,12 +212,12 @@ def Error(w,x,label):
     return e/len(x)
 
 # Regresión Logística con SGD
-def rl_sgd(datos, label, lr, max_etapas, wini, diff):
+def rl_sgd(datos, label, lr, max_epocas, wini, diff):
     w=wini
     # Para que nunca se cumpla la condición ||w(t+1)-w(t)||<diff al principio
     w1=wini+np.ones(len(wini))*diff*2
-    etapa=0
-    while etapa<max_etapas and np.linalg.norm(w-w1) >= diff:
+    epoca=0
+    while epoca<max_epocas and np.linalg.norm(w-w1) >= diff:
         w1=w # Para guardar el w de la etapa anterior
         # Barajo los datos y las etiquetas al unísono
         r_state=np.random.get_state()
@@ -227,18 +227,18 @@ def rl_sgd(datos, label, lr, max_etapas, wini, diff):
         # Itero sobre los N datos
         for n in range(len(datos)): 
             w=w-lr*grad_e_n(n,w,datos,label)
-        etapa+=1  
-    return w
+        epoca+=1  
+    return w, epoca
 
 print('Regresión Logística con Gradiente Descendente Estocástico')
 
 w=np.zeros(x.shape[1]) # Parto de los pesos a 0
 lr=0.01
-max_etapas=5000 # Para asegurar que pare
+max_epocas=5000 # Para asegurar que pare
 diff=0.01
 
-w = rl_sgd(x, label, lr, max_etapas, w, diff)
-print('Solución: w=',w)
+w,e = rl_sgd(x, label, lr, max_epocas, w, diff)
+print('Solución: w=',w,'\t(tras',e,'épocas)')
 pintarMuestraRecta(x, [0,2,0,2], label, w, 'Solución obtenida mediante Regresión Logística con SGD')
 
 print('Error en la muestra: Ein=',Error(w,x,label))
@@ -252,8 +252,8 @@ test_data=simula_unif(1500,2,[0,2])
 # Añado x_0=1
 test_data=np.hstack((np.ones((len(test_data),1)),test_data)) # Le añado el 1 al vector de características
 
-# Muestra de test
-test_label=np.sign(h(test_data[:,1],test_data[:,2]))
+# Etiquetas de test
+test_label = etiquetaMuestraFun(test_data[:,1:],h)
 
 print('Estimación del error fuera del conjunto de entrenamiento')
 print('Eout=', Error(w,test_data, test_label))

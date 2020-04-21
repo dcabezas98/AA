@@ -153,24 +153,17 @@ iteraciones, ya que al partir del mismo punto el comportamiento del
 algoritmo es exactamente el mismo. La solución obtenida ha sido
 $w=[-3,-57.36159336,28.53120771]$.
 
-\vspace{-3mm}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=82mm]{imgs/PLA.png}
-    \caption{Recta obtenida con PLA partiendo de pesos nulos (muestra separable)}
-    \label{fig:PLA}
-\end{figure}
-\vspace{-3mm}
-
-Luego he realizado 10 ejecuciones partiendo de vectores de números
+Luego, he realizado 10 ejecuciones partiendo de vectores de números
 aleatorios en $[0,1]$, las iteraciones necesarias en cada ejecución
 han sido: 2, 3, 3, 2, 3, 2, 3, 2, 3, 3 (media 2.6). Ahora el algoritmo
 ha tenido comportamientos diferentes, ya que ha partido de un $w_{ini}$
 diferente en cada iteración.
 En este caso el número de iteraciones no presenta más que una ligera
-variación respecto al vector inicial, pero con muestras (variando la
+variación respecto al vector inicial, pero con otras muestras (variando la
 semilla) he obtenido resultados muy variados (tanto mejores como peores),
-luego no podemos concluir nada respecto a la eficiencia del algoritmo.
+luego no podemos concluir nada respecto a la eficiencia del algoritmo, al menos con un $w$
+inicial que no dependa de la muestra (probablemente partiendo de un ajuste por
+regresión lineal necesitaría menos iteraciones para converger).
 
 \title{\bf \large Caso de muestra no separable:}
 
@@ -181,26 +174,75 @@ separables y que el algoritmo no converja. He limitado las iteraciones
 a 500 para que pare en algún momento y efectivamente ha agotado las
 500 iteraciones en todos los casos, tanto partiendo del vector cero
 como de vectores de valores aleatorios en $[0,1]$. Partiendo del 
-vector cero, he obtenido la solución $w=[-45,-37.98579548,38.22893039]$.
+vector cero, he obtenido la solución (que no separa todos los puntos) $w=[-45,-37.98579548,38.22893039]$.
+
+\begin{figure}[H]
+    \centering
+    \subfigure[Muestra separable]{\includegraphics[width=82mm]{imgs/PLA.png}}
+    \subfigure[Muestra no separable]{\includegraphics[width=82mm]{imgs/PLA_noise.png}}
+    \caption{Recta obtenida con PLA partiendo de pesos nulos}
+    \label{fig:lin-regress}
+\end{figure}
+
+\newpage 
+
+\subsection{Regresión Logística}
+
+Quiero estimar una función $f$ que asigna la probabilidad (0 ó 1) de que
+un elemento del cuadrado $\mathcal{X}=[0,2]\times[0,2]$ esté por
+encima (etiqueta $y=+1$) o por debajo (etiqueta $y=-1$) de una
+recta que corta a $\mathcal{X}$ (generada con \texttt{simula\_recta}). Para ello, he elegido una muestra
+aleatoria de puntos de $\mathcal{X}$ de tamaño $N=100$ y he aplicado
+Regresión Logística con Gradiente Descendiente Estocástico partiendo
+de $w=0$ y parando cuando $\|w^{(t-1)}-w^{(t)}\|<0.01$, donde $w^{(t)}$
+denota el vector de pesos al final de la época $t$,
+considerando una época como un pase completo por los $N$ datos de uno en
+uno, barajando los datos antes de cada época. Y con learning rate $\eta = 0.01$.
+Para asegurar que termina, lo he limitado a 5000 épocas.
+
+Tras 490 épocas, se ha cumplido la condición de parada y he obtenido
+la solución $w= [-9.67809029,  6.67183542, 3.23847583]$, y un error
+en la muestra $E_{in}=0.12321116789555302$.
+
+La función $g$ obtenida es de la forma $g(x)=\sigma(w^Tx)$ donde $x\in\{1\}\times\mathcal{X}=\{1\}\times[0,2]\times[0,2]$
+y $\sigma$ denota la sigmoide: $\sigma(t)=\frac{e^t}{e^t+1}=\frac{1}{1+e^{-t}}\in (0,1)\quad\forall t\in\mathbb{R}$.
 
 \vspace{-3mm}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=82mm]{imgs/PLA_noise.png}
-    \caption{Recta obtenida con PLA partiendo de pesos nulos (muestra no separable)}
-    \label{fig:PLA}
+    \subfigure[Muestra junto con función objetivo]{\includegraphics[width=82mm]{imgs/rl_target.png}}
+    \subfigure[Datos de entrenamiento junto con solución obtenida]{\includegraphics[width=82mm]{imgs/rl-sgd.png}}
+    \caption{Muestra con funciones objetivo y solución}
+    \label{fig:lin-regress}
 \end{figure}
-\vspace{-3mm}
 
-\subsection{Regresión Logística}
+En la gráfica de la derecha se representa la recta $\sigma(w^Tx)=0.5$,
+la frontera que separa los puntos $x\in\mathcal{X}$ para los que nuestra función $g$
+predice pertenencia a la clase del $8$ \big($g(x)=P(y=+1|x)>0.5$\big)
+de los puntos para los que predice pertenencia a la clase del $4$
+\big($g(x)=P(y=+1|x)<0.5$\big).
 
+A continuación, he generado una nueva muestra de 1500 puntos nuevos
+de $\mathcal{X}$ y he calculado el error de Regresión Logística
+sobre ésta para obtener una estimación del valor de $E_{out}$.
+La estimación que he obtenido es $E_{out}\approx 0.12589042241455026$.
 
-
+\newpage
 \section{Bonus: Clasificación de dígitos}
 
-%%%% Describir problema de clasificación binaria
+Tenemos un conjunto de dígitos manuscritos que queremos clasificar
+en dos clases, los que corresponden al dígito 4 y lo que corresponden
+al dígito 8. Para cada datos \textbf{x} consideramos dos características,
+$x_1$ la intensidad promedio de gris y $x_2$ la simetría respecto
+al eje vertical. Luego cada dato de la muestra será de la forma
+$\textbf{x}=(1,x_1,x_2)$. Las etiquetas son $y=+1$ si \textbf{x}
+corresponde al dígito 8 e $y=-1$ si \textbf{x} corresponde al dígito 4.
 
-Primero he ajustado un modelo de Regresión Lineal, usando el algoritmo
+Pretendemos aprender una función lineal $g$ que prediga para cada \textbf{x}
+su etiqueta $y$. La función será de la forma $g(\textbf{x})=w^Tx$
+para algún vector de pesos $w$.
+
+Para ello, primero he ajustado un modelo de Regresión Lineal, usando el algoritmo
 de la pseudoinversa. \\ He obtenido los pesos $w= [-0.50676351,  8.25119739,  0.44464113]$
  y los errores de clasificación (proporción de puntos mal clasificados) $E_{in}=0.22780569514237856$ y $E_{test} = 0.25136612021857924$.
 
@@ -214,7 +256,7 @@ de la pseudoinversa. \\ He obtenido los pesos $w= [-0.50676351,  8.25119739,  0.
 \vspace{-3mm}
 
 A continuación, he utilizado esa solución como valor inicial para
-el algoritmo PLA-Pocket con 100 etapas, he obtenido los pesos $w= [-6.50676351, 94.33278003, 4.88432863]$
+el algoritmo PLA-Pocket con 100 épocas, he obtenido los pesos $w= [-6.50676351, 94.33278003, 4.88432863]$
 y los errores de clasificación (proporción de puntos mal clasificados)
 $E_{in} = 0.22529313232830822$ y $E_{test} = 0.2540983606557377$.
 
@@ -230,7 +272,6 @@ $E_{in} = 0.22529313232830822$ y $E_{test} = 0.2540983606557377$.
 Obviamente en PLA-Pocket $E_{in}$ no puede empeorar respecto al inicial,
 he obtenido un $E_{in}$ ligeramente más bajo y $E_{test}$ ligeramente más alto 
 al aplicar la mejora de PLA-Pocket.
-
 
 \end{document}
 
