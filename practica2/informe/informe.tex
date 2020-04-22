@@ -273,13 +273,35 @@ Obviamente en PLA-Pocket $E_{in}$ no puede empeorar respecto al inicial,
 he obtenido un $E_{in}$ ligeramente más bajo y $E_{test}$ ligeramente más alto 
 al aplicar la mejora de PLA-Pocket.
 
-\end{document}
-
-% REVISAR
-Utilizando la fórmula
-\[E_{out}(h)\leq E_{in}(h)+\sqrt{\frac{1}{2N}\log{\frac{2}{\delta}}}\qquad\text{con probabilidad}\geq 1-\delta\]
+Utilizando la desigualdad de Hoeffding
+\[E_{out}(h)\leq E_{in}(h)+\sqrt{\frac{1}{2N}\log{\frac{2|\mathcal{H}|}{\delta}}}\qquad\text{con probabilidad}\geq 1-\delta\]
 puedo calcular una cota para $E_{out}$ basada en $E_{in}$ con tolerancia $0.05$.
+
+El problema es que el conjunto de rectas de $\mathbb{R}^2$ es
+continuo, así que tenemos que discretizarlo.
+¿Cuántas rectas podemos codificar en nuestro ordenador?
+
+Cada recta no vertical tiene dos parámetros libres (pendiente y término
+independiente), y cada recta vertical tiene un parámetro libre (es de la
+forma $x=k$). Cada parámetro es un escalar de 64 bits, luego el número de posibles
+rectas es $2^{2\cdot 64}+2^{64}$ (el primer sumando corresponde a las rectas
+no verticales y el segundo a las verticales).
+
+Para cada recta, podemos definir dos funciones $h$:
+Una que a un lado asigne el valor 1 y a el otro lado
+el valor -1 y otra que haga justo lo opuesto. Por lo
+tanto concluimos que $|\mathcal{H}|=2^{129}+2^{65}$ (2 veces el número de rectas).
+
 En el conjunto de entrenamiento $N=1194$. Luego puedo asegurar con probabilidad mayor o igual que 0.95 que
-\[E_{out}\leq 0.22529313232830822 + \sqrt{\frac{1}{2388}\log{\frac{2}{\delta}}}=0.22529313232830822+0.0393033954=0.2645965277\]
+\[E_{out}\leq 0.22529313232830822 + 0.1974554057 = 0.42274853802830825\]
+
+El caso de $E_{test}$ es muy diferente. Por una parte sólo tenemos
+$N=366$ datos, lo que aumenta la cota. Pero en cambio, la función elegida
+ya está fijada y no depende de los datos de test (cosa que no pasaba con los
+de entrenamiento), por tanto puedo tomar $|H|=1$ en la desigualdad, obteniendo
+\[E_{out}\leq 0.2540983606557377 + 0.07098910343 = 0.3250874641\]
+con probabilidad mayor o igual que 0.95. Esta independencia entre la función y
+los datos hace que la cota basada en $E_{test}$ sea mucho más precisa que la
+basada en $E_{in}$.
 
 \end{document}

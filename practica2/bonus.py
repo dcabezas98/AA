@@ -59,7 +59,7 @@ def pseudoinverse(x, y):
 	w=np.dot(x_pinv,y)
 	return w
 
-# Error de clasificación proporción de elementos mal clasificados
+# Error de clasificación: proporción de elementos mal clasificados
 def Eclass(w,x,y):
     err=0
     for i, xi in enumerate(x):
