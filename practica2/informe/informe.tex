@@ -239,7 +239,7 @@ $\textbf{x}=(1,x_1,x_2)$. Las etiquetas son $y=+1$ si \textbf{x}
 corresponde al dígito 8 e $y=-1$ si \textbf{x} corresponde al dígito 4.
 
 Pretendemos aprender una función lineal $g$ que prediga para cada \textbf{x}
-su etiqueta $y$. La función será de la forma $g(\textbf{x})=w^Tx$
+su etiqueta $y$. La función será de la forma $g(\textbf{x})=\operatorname{sign}(w^Tx)$
 para algún vector de pesos $w$.
 
 Para ello, primero he ajustado un modelo de Regresión Lineal, usando el algoritmo
@@ -281,18 +281,19 @@ El problema es que el conjunto de rectas de $\mathbb{R}^2$ es
 continuo, así que tenemos que discretizarlo.
 ¿Cuántas rectas podemos codificar en nuestro ordenador?
 
-Cada recta tiene dos parámetros libres, ya que la escribimos cómo $ax+by+c=0$,
-pero $a$ o $b$ nunca pueden ser los dos nulos, luego siempre podemos despejar
-$y=ux+v$ o $x=uy+v$. Cada parámetro es un escalar de 64 bits, luego el número de posibles
-rectas es $2^{2\cdot 64}$.
+La única forma de contemplar todas las posibles rectas con una única
+representación necesita 3 parámetros $w=(w_0,w_1,w_2)$.
+Es cierto que al considerar las funciones $h_w(x)=\operatorname{sign}(w^Tx)$,
+dos vectores $w,w'$ para los que existe un escalar positivo $k$ tal que
+$w=kw'$ dan lugar a la misma función ($h_w=h_{w'}$). Sin embargo,
+en un ordenador el conjunto de posibles valores $k$ es discreto,
+luego la cota que estamos hallando es usable.
 
-Para cada recta, podemos definir dos funciones $h$:
-Una que a un lado asigne el valor 1 y a el otro lado
-el valor -1 y otra que haga justo lo opuesto. Por lo
-tanto concluimos que $|\mathcal{H}|=2^{129}$ (2 veces el número de rectas).
+Como cada parámetro es un escalar que ocupa 64 bits, podemos
+concluir que $|\mathcal{H}|\leq 2^{3\cdot 64}$.
 
-En el conjunto de entrenamiento $N=1194$. Luego puedo asegurar con probabilidad mayor o igual que 0.95 que
-\[E_{out}\leq 0.22529313232830822 + 0.1974554057 = 0.42274853802830825\]
+En el conjunto de entrenamiento $N=1194$, luego puedo asegurar con probabilidad mayor o igual que 0.95 que
+\[E_{out}\leq 0.22529313232830822 + 0.2393223422 = 0.4646154745\]
 
 El caso de $E_{test}$ es muy diferente. Por una parte sólo tenemos
 $N=366$ datos, lo que aumenta la cota. Pero en cambio, la función elegida
