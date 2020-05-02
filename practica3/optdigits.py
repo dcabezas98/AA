@@ -6,14 +6,15 @@
 VISUALIZE2D=False # Para la visualización de los datos en 2D (tarda un poco)
 
 PREPROCESSING=True # Preprocesado de los datos, para poder comparar la mejora que supone
-VARTHRESHOLD=0.01 # Umbral de varianza por debajo del cual elimino la característica
+VARTHRESHOLD=0.005 # Umbral de varianza por debajo del cual elimino la característica
+POLY=2 # Grado de las características polinomiales (poner 1 o 2)
 VARPCA=0.975 # Porcentaje de variabilidad de la distribución que deben explicar las características que no elimine
 
 LR=0.01 # Tasa de aprendizaje del SGD para SoftMax
 ITERS=2500 # Número máximo de iteraciones
 MINIBATCH_SIZE=32 # Tamaño de minibatch
 
-PRUEBAS = 2 # Número de pruebas detalladas del modelo
+PRUEBAS = 0  # Número de pruebas detalladas del modelo
 
 # Rutas a los ficheros de datos
 TRAIN='datos/optdigits.tra'
@@ -151,6 +152,40 @@ def sgd_SoftMax(x,y, lr, iters, minibatch_size, wini=None):
 
     return w
 
+# Predicción para una entrada
+def predict1(w,x):
+
+    p=np.zeros(10)
+
+    for k in range(10):
+        p[k]=np.exp(np.dot(w[k],x))
+
+    return np.argmax(p) # Clase con más probabilidad
+
+# Predicción para un conjunto de entradas
+def predict(w, x):
+
+    predictions = np.zeros(np.shape(x)[0])
+    for n in range(np.shape(x)[0]): # Calculo la predicción para cada elemento
+        predictions[n] = predict1(w,x[n])
+
+    return predictions
+
+# Accuracy y matriz de confusión
+def classificationScore(y, pred, set_name):
+
+    # Precisión de la clasificación
+    accuracy=metrics.accuracy_score(y, pred)
+    print('Precisión sobre ' +set_name+':', accuracy)
+
+    # Matriz de confusión:
+    print('\nMatriz de confusión sobre ' +set_name)
+    conf_mat=metrics.confusion_matrix(y,pred, normalize='all')
+    visualizeMatrix(conf_mat, title='Matriz de confusión en el conjunto de '+set_name, conf=True)
+
+    return accuracy
+
+# Main
 if __name__ == "__main__":
 
     print('\nEjercicio de clasificación:')
@@ -185,14 +220,13 @@ if __name__ == "__main__":
 
         # Matriz de coeficientes de Pearson para ver la correlación entre los datos
         # (necesito eliminar las características con varianza 0 para poder computarlos)
-
         x_1 = VarianceThreshold().fit_transform(x)
 
-        cov_m = np.corrcoef(np.transpose(x_1))
+        corr_m = np.corrcoef(np.transpose(x_1))
 
         print('Matriz de coeficientes de correlación de Pearson antes del preprocesado (eliminadas características con varianza 0)')
 
-        visualizeMatrix(cov_m, 'Matriz de coeficientes de Pearson\nde las características (sin las de varianza 0)')
+        visualizeMatrix(corr_m, 'Matriz de coeficientes de Pearson\nde las características (sin las de varianza 0)')
 
         input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -201,6 +235,9 @@ if __name__ == "__main__":
         # Elimina las características con baja varianza
         selector = VarianceThreshold(VARTHRESHOLD)
 
+        # Introducción de características polinomiales
+        poly=preprocessing.PolynomialFeatures(POLY)
+
         # Escala las características para dejarlas con media 0 y varianza 1
         scaler = preprocessing.StandardScaler()
 
@@ -208,7 +245,7 @@ if __name__ == "__main__":
         pca = PCA(n_components=VARPCA)
 
         # Guardo el preprocesado en un pipeline para aplicarlo tanto a train como a test
-        pipln = Pipeline([('selector',selector),('scaler',scaler),('PCA',pca)])
+        pipln = Pipeline([('selector',selector),('poly',poly),('scaler',scaler),('PCA',pca)])
 
         pipln.fit(x) # Lo ajusto con train
 
@@ -221,9 +258,9 @@ if __name__ == "__main__":
         
         input("\n--- Pulsar tecla para continuar ---\n")
 
-        cov_m = np.corrcoef(np.transpose(x))
+        corr_m = np.corrcoef(np.transpose(x))
         print('Matriz de coeficientes de correlación de Pearson tras el preprocesado')
-        visualizeMatrix(cov_m, 'Matriz de coeficientes de Pearson\n de las características tras preprocesado')
+        visualizeMatrix(corr_m, 'Matriz de coeficientes de Pearson\n de las características tras preprocesado')
 
         input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -243,8 +280,9 @@ if __name__ == "__main__":
 
     input("\n--- Pulsar tecla para continuar ---\n")
 
-    # Hacemos algunas pruebas
-    print('Pruebas:\n')
+    # Hacemos algunas pruebas sobre el conjunto de test
+    if PRUEBAS > 0:
+        print('Pruebas:\n')
     for _ in range(PRUEBAS):
 
         n = np.random.randint(0,len(x_test)) # Elijo un elemento
@@ -269,25 +307,16 @@ if __name__ == "__main__":
 
         input("\n--- Pulsar tecla para continuar ---\n")
 
+    # Predicciones sobre el conjunto de entrenamiento
+    pred = predict(w,x)
+    # Medimos la bondad del resultado
+    classificationScore(y, pred, 'train')
+
+    input("\n--- Pulsar tecla para continuar ---\n")
+
     # Predicciones sobre el test
-    predictions = np.zeros(np.shape(y_test)[0])
-    p=np.zeros(np.shape(y_1hot)[1])
-    for n in range(np.shape(x_test)[0]): # Calculo la predicción para cada elemento
-
-        for k in range(np.shape(y_1hot)[1]):
-            p[k]=np.exp(np.dot(w[k],x_test[n]))
-
-        predictions[n] = np.argmax(p) # Prediccion para el elemento n de test
-
-
-    # Precisión de la clasificación
-    accuracy=metrics.accuracy_score(y_test, predictions)
-
-    print('Precisión:', accuracy)
-
-    # Calculamos la matriz de confusión:
-    print('\nMatriz de confusión:')
-    conf_mat=metrics.confusion_matrix(y_test,predictions, normalize='all')
-    visualizeMatrix(conf_mat, title='Matriz de confusión en el conjunto de test', conf=True)
+    pred_test = predict(w,x_test)
+    # Medimos la bondad del resultado
+    classificationScore(y_test, pred_test, 'test')
 
     input("\n--- Pulsar tecla para continuar ---\n")
