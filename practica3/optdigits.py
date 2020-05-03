@@ -3,6 +3,8 @@
 
 # Parámetros ajustables:
 
+NSAMPLES=3 # Vara visualizar algunos datos
+
 VISUALIZE2D=False # Para la visualización de los datos en 2D (tarda un poco)
 
 PREPROCESSING=True # Preprocesado de los datos, para poder comparar la mejora que supone
@@ -16,7 +18,7 @@ LR=0.01 # Tasa de aprendizaje del SGD para SoftMax
 TOTAL_ITERS=50000 # (TOTAL_ITERS/minibatch_size es el número real de iteraciones)
 MINIBATCH_SIZE=32 # Tamaño de minibatch
 
-PARAMSELECT=True # Para el seleccionador de parámetros (tarda mucho)
+PARAMSELECT=False # Para el seleccionador de parámetros (tarda mucho)
 LMBD_RANGE=[0.001, 0.05, 24] # Valores para lambda (inicio, fin, valores)
 LR_RANGE=[0.001, 0.02, 16] # Valores para lr (inicio, fin, valores)
 MINIBATCH_SIZE_RANGE=[1,8,16,32] # Posibles valores para el tamaño de minibatch
@@ -51,7 +53,7 @@ from itertools import product
 
 
 # Fijo la semilla
-np.random.seed(16)
+np.random.seed(25)
 
 
 # Función para leer los datos
@@ -244,10 +246,21 @@ if __name__ == "__main__":
     x_matrix = matrixData(x)
     x_matrix_test = matrixData(x_test)
 
-    # Visualización de los datos en 2D
-    if(VISUALIZE2D):
+    # Visualización de algunas muestras
+    if NSAMPLES > 0:
+        print('Visualización de algunas muestras')
+    for _ in range(NSAMPLES):
 
-        print("Representación de los dígitos en dos dimensiones:\n")
+        n = np.random.randint(0,len(x_matrix)) # Elijo un elemento
+
+        visualizeMatrix(x_matrix[n], 'Dígito: '+str(y[n]))
+
+        input("\n--- Pulsar tecla para continuar ---\n")
+
+    # Visualización de los datos en 2D
+    if VISUALIZE2D:
+
+        print("Representación de los datos en dos dimensiones:\n")
 
         print("Generando visualización con PCA: ...")
 
@@ -263,7 +276,7 @@ if __name__ == "__main__":
         input("\n--- Pulsar tecla para continuar ---\n")
 
     # Preprocesado
-    if(PREPROCESSING):
+    if PREPROCESSING:
 
         # Matriz de coeficientes de Pearson para ver la correlación entre los datos
         # (necesito eliminar las características con varianza 0 para poder computarlos)
@@ -316,10 +329,10 @@ if __name__ == "__main__":
     clr = classifierLR(LR, MINIBATCH_SIZE, LMBD)
     
     # Ajustar hiperparámetros
-    if(PARAMSELECT):
+    if PARAMSELECT:
         print('Ajustando parámetros del modelo ...')
         param_grid={'lr': np.linspace(*LR_RANGE), 'minibatch_size': MINIBATCH_SIZE_RANGE, 'lmbd':np.linspace(*LMBD_RANGE)}
-        searcher = model_selection.GridSearchCV(clr, param_grid, n_jobs=-1,verbose=0)
+        searcher = model_selection.GridSearchCV(clr, param_grid, n_jobs=-1,verbose=15)
         search = searcher.fit(x,y)
 
         print('Mejores parámetros:', search.best_params_)
