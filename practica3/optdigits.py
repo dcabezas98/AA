@@ -5,16 +5,23 @@
 
 VISUALIZE2D=False # Para la visualización de los datos en 2D (tarda un poco)
 
-PREPROCESSING=True # Preprocesado de los datos, para poder comparar la mejora que supone
+PREPROCESSING=False # Preprocesado de los datos, para poder comparar la mejora que supone
 VARTHRESHOLD=0.005 # Umbral de varianza por debajo del cual elimino la característica
 POLY=2 # Grado de las características polinomiales (poner 1 o 2)
 VARPCA=0.975 # Porcentaje de variabilidad de la distribución que deben explicar las características que no elimine
 
+PARAMSELECT=True # Para el seleccionador de parámetros
+VAL_LMBD=[0.001, 0.1, 4] # Valores para lambda (inicio, fin, valores)
+VAL_LR=[0.001, 0.1, 6] # Valores para lr (inicio, fin, valores)
+
+V_FOLD = 10 # Subdivisiones para Cross-Validation
+
+LMBD=0.02 # Penalización para regularización
 LR=0.01 # Tasa de aprendizaje del SGD para SoftMax
 ITERS=2500 # Número máximo de iteraciones
 MINIBATCH_SIZE=32 # Tamaño de minibatch
 
-PRUEBAS = 0  # Número de pruebas detalladas del modelo
+PRUEBAS = 0  # Número de pruebas detalladas del modelo sobre el conjunto de test
 
 # Rutas a los ficheros de datos
 TRAIN='datos/optdigits.tra'
@@ -29,6 +36,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.lines import Line2D
 
+from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.pipeline import Pipeline
@@ -36,8 +44,12 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn import preprocessing
 from sklearn import metrics
 
+from itertools import product
+
+
 # Fijo la semilla
 np.random.seed(16)
+
 
 # Función para leer los datos
 def readData(data_file):
@@ -106,7 +118,8 @@ def sigm(x):
     return 1/(1+np.exp(-x))
 
 # Función de pérdida para clasificación multietiqueta por SoftMax (w es una matriz)
-def E(w, x, y):
+# permite añadir regularización
+def E(w, x, y, lmbd = 0):
 
     N = np.shape(x)[0]
     K = np.shape(y)[1]
@@ -118,10 +131,11 @@ def E(w, x, y):
             t = sigm(np.dot(w[k],x[n]))
             e -= y[n,k]*np.log(t)
 
-    return e/N
+    return e/N + lmbd*np.linalg.norm(w) # Ein + penalización reg
 
 # Gradiente respecto al vector wj
-def gradE(j,w,x,y):
+# permite añadir regularización
+def gradE(j,w,x,y, lmbd = 0):
 
     N = np.shape(x)[0]
     ge = np.zeros(np.shape(x)[1])
@@ -130,10 +144,11 @@ def gradE(j,w,x,y):
         t = sigm(np.dot(w[j],x[n]))
         ge = (t-y[n,j])*x[n]
 
-    return ge
+    return ge + lmbd*w[j] # Gradiente Ein + penalización reg
 
 # Gradiente Descendente Estocástico para entrenar el modelo
-def sgd_SoftMax(x,y, lr, iters, minibatch_size, wini=None):
+# permite añadir regularización
+def sgd_SoftMax(x,y, lr, iters, minibatch_size, lmbd=0, wini=None):
 
     if wini is None:
         w = np.zeros((np.shape(y)[1],np.shape(x)[1]))
@@ -146,7 +161,7 @@ def sgd_SoftMax(x,y, lr, iters, minibatch_size, wini=None):
         minib = np.random.randint(0, len(x), minibatch_size) 
 
         # Calculo gradiente de E respecto a los distintos wj
-        grad = np.array([gradE(j, w, x[minib], y[minib]) for j in range(np.shape(y)[1])])
+        grad = np.array([gradE(j, w, x[minib], y[minib],lmbd) for j in range(np.shape(y)[1])])
 
         w = w - lr*grad
 
@@ -184,6 +199,48 @@ def classificationScore(y, pred, set_name):
     visualizeMatrix(conf_mat, title='Matriz de confusión en el conjunto de '+set_name, conf=True)
 
     return accuracy
+
+# V-fold Cross-Validation para calcular Ecv
+def vFoldCV(x,y,y_1hot, v, lr, lmbd=0):
+    
+    Ecv = 0
+
+    return Ecv
+
+# Seleccionador de parámetros con V-fold Cross-Validation
+def paramSelector(x, y, y_1hot, val_lmbd=VAL_LMBD, val_lr=VAL_LR):
+    
+    lmbd_values=np.linspace(*VAL_LMBD)
+    lr_values=np.linspace(*VAL_LR)
+
+    best_Ecv = 0
+    best_lmbd = lmbd_values[0]
+    best_lr = lr_values[0]
+
+    for lmbd, lr in product(lmbd_values, lr_values):
+        Ecv = vFoldCV(x,y,y_1hot,V_FOLD, lr, lmbd)
+        if Ecv > best_Ecv: # Selección de los mejores parámetros
+            best_Ecv = Ecv
+            best_lmbd=lmbd
+            best_lr=lr
+    
+    return best_lmbd, best_lr
+        
+
+# Clasificador: realiza Regresión Logística multietiqueta
+# y predice con SoftMax
+class classifierLR(BaseEstimator):
+
+    def __init__(self, lr, lmbd):
+
+        self.lr=lr
+        self.lmbd=lmbd
+
+    def fit(self, x, y):
+
+        # Para el algoritmo necesito las etiquetas codificadas de esta forma
+        y_1hot=oneHotLabel(y)
+
 
 # Main
 if __name__ == "__main__":
@@ -265,24 +322,30 @@ if __name__ == "__main__":
         input("\n--- Pulsar tecla para continuar ---\n")
 
     # Clasificación multietiqueta: SoftMax
-
-    # Para el algoritmo necesito las etiquetas codificadas de esta forma
-    y_1hot=oneHotLabel(y) 
-    y_1hot_test=oneHotLabel(y_test)
+     
+    # Selección de hiperparámetros
+    if PARAMSELECT:
+        paramSelector(x,y,y_1hot)
 
     # Gradiente descendiente estocástico para ajustar el modelo
     print('Regresión Logística Multietiqueta')
     print('Entrenando modelo con SGD ...')
-    w = sgd_SoftMax(x, y_1hot, LR, ITERS, MINIBATCH_SIZE)
+    w = sgd_SoftMax(x, y_1hot, LR, ITERS, MINIBATCH_SIZE,LMBD)
 
-    print('Pérdida logarítmica en la muestra:', E(w,x,y_1hot))
-    print('Pérdida logarítmica en test:', E(w,x_test,y_1hot_test))
+    print('Pérdida logarítmica (aumentada) en la muestra:', E(w,x,y_1hot))
+
+    input("\n--- Pulsar tecla para continuar ---\n")
+
+    # Predicciones sobre el conjunto de entrenamiento
+    pred = predict(w,x)
+    # Medimos la bondad del resultado
+    classificationScore(y, pred, 'train')
 
     input("\n--- Pulsar tecla para continuar ---\n")
 
     # Hacemos algunas pruebas sobre el conjunto de test
     if PRUEBAS > 0:
-        print('Pruebas:\n')
+        print('Pruebas sobre test:\n')
     for _ in range(PRUEBAS):
 
         n = np.random.randint(0,len(x_test)) # Elijo un elemento
@@ -307,16 +370,11 @@ if __name__ == "__main__":
 
         input("\n--- Pulsar tecla para continuar ---\n")
 
-    # Predicciones sobre el conjunto de entrenamiento
-    pred = predict(w,x)
-    # Medimos la bondad del resultado
-    classificationScore(y, pred, 'train')
-
-    input("\n--- Pulsar tecla para continuar ---\n")
-
     # Predicciones sobre el test
+    y_1hot_test=oneHotLabel(y_test)
+    print('Pérdida logarítmica (aumentada) en test:', E(w,x_test,y_1hot_test))
     pred_test = predict(w,x_test)
     # Medimos la bondad del resultado
     classificationScore(y_test, pred_test, 'test')
-
+    
     input("\n--- Pulsar tecla para continuar ---\n")
