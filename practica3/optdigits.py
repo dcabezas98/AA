@@ -3,9 +3,9 @@
 
 # Parámetros ajustables:
 
-NSAMPLES=3 # Vara visualizar algunos datos
+NSAMPLES=0 # Vara visualizar algunos datos
 
-VISUALIZE2D=False # Para la visualización de los datos en 2D (tarda un poco)
+VISUALIZE2D=True # Para la visualización de los datos en 2D (tarda un poco)
 
 PREPROCESSING=True # Preprocesado de los datos, para poder comparar la mejora que supone
 VARTHRESHOLD=0.005 # Umbral de varianza por debajo del cual elimino la característica
@@ -13,19 +13,19 @@ POLY=2 # Grado de las características polinomiales (poner 1 o 2)
 VARPCA=0.975 # Porcentaje de variabilidad de la distribución que deben explicar las características que no elimine
 
 # Parámetros por defecto del modelo
-LMBD=0.02 # Penalización para regularización
-LR=0.01 # Tasa de aprendizaje del SGD para SoftMax
+LMBD=0.007391304347826088 # Penalización para regularización
+LR=0.001 # Tasa de aprendizaje del SGD para SoftMax
+MINIBATCH_SIZE=1 # Tamaño de minibatch
 TOTAL_ITERS=50000 # (TOTAL_ITERS/minibatch_size es el número real de iteraciones)
-MINIBATCH_SIZE=32 # Tamaño de minibatch
 
-PARAMSELECT=False # Para el seleccionador de parámetros (tarda mucho)
+PARAMSELECT=False # Para el seleccionador de parámetros (tarda varias horas)
 LMBD_RANGE=[0.001, 0.05, 24] # Valores para lambda (inicio, fin, valores)
 LR_RANGE=[0.001, 0.02, 16] # Valores para lr (inicio, fin, valores)
-MINIBATCH_SIZE_RANGE=[1,8,16,32] # Posibles valores para el tamaño de minibatch
+MINIBATCH_SIZE_RANGE=[1,4,8,16,32] # Posibles valores para el tamaño de minibatch
 
 V_FOLD = 10 # Subdivisiones para Cross-Validation
 
-PRUEBAS = 0  # Número de pruebas detalladas del modelo sobre el conjunto de test
+PRUEBAS = 2  # Número de pruebas detalladas del modelo sobre el conjunto de test
 
 # Rutas a los ficheros de datos
 TRAIN='datos/optdigits.tra'
@@ -352,8 +352,11 @@ if __name__ == "__main__":
     input("\n--- Pulsar tecla para continuar ---\n")
 
     # V-fold Cross-Validation para estimar el error fuera de la muestra
+    print('Validación cruzada del modelo ...')
+    Ecv=model_selection.cross_val_score(clr,x,y,cv=V_FOLD,n_jobs=-1) 
+    print('Ecv =',np.mean(Ecv))
 
-
+    input("\n--- Pulsar tecla para continuar ---\n")
 
     # Hacemos algunas pruebas sobre el conjunto de test
     if PRUEBAS > 0:
