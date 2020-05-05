@@ -1,7 +1,7 @@
 # Clasificación de Dígitos
 # David Cabezas Berrido
 
-# Parámetros ajustables:
+# Variables ajustables:
 
 NSAMPLES=0 # Vara visualizar algunos datos
 
@@ -25,7 +25,7 @@ MINIBATCH_SIZE_RANGE=[1,4,8,16,32] # Posibles valores para el tamaño de minibat
 
 V_FOLD = 10 # Subdivisiones para Cross-Validation
 
-PRUEBAS = 2  # Número de pruebas detalladas del modelo sobre el conjunto de test
+PRUEBAS = 3  # Número de pruebas detalladas del modelo sobre el conjunto de test
 
 # Rutas a los ficheros de datos
 TRAIN='datos/optdigits.tra'

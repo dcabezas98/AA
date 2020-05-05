@@ -84,7 +84,7 @@ para comprender mejor el formato de los datos.
   \subfigure[Instancia correspondiente al 9]{\includegraphics[width=57.5mm]{imgs/sample2.png}}
   \subfigure[Instancia correspondiente al 8]{\includegraphics[width=57.5mm]{imgs/sample3.png}}
   \caption{Algunas instancias de los datos}
-  \label{fig:digits-matrix}
+  \label{fig:samples}
 \end{figure}
 
 La población $X$ constituye el conjunto de vectores de 64 enteros
@@ -139,7 +139,7 @@ mismas personas que trazaron los dígitos de entrenamiento.
 Este hecho provoca que la estimación de $E_{out}$ realizada con
 Cross-Validation sea demasiado optimista, por ser los datos de
 validación correspondientes a las mismas personas que los de
-entrenamiento.
+entrenamiento. \label{cv-optimistic}
 
 
 \subsection{Clases de funciones a usar y Preprocesamiento}
@@ -160,7 +160,7 @@ polinomiales al preprocesamiento.
 
 Para el preprocesamiento, creamos un Pipeline que primero elimina con
 Variance Threshold las características con varianza menor que un
-umbral, en mi caso 0.005. Estas características apenas ayudan a
+umbral, en este caso 0.005. Estas características apenas ayudan a
 distinguir las instancias de la muestra. En segundo lugar añade
 características de grado 2, ahora el número de características es
 igual al cuadrado de las que quedaban tras la primera selección en
@@ -202,17 +202,210 @@ practicamente 0 como queríamos.
 
 \subsection{Métricas}
 
+Mirando el fichero \texttt{opdigits.names} percibimos que el número de
+ejemplos de cada clase está balanceado tanto en training (entre 376 y
+389) como en test (entre 174 y 183). En esta situación, la precisión
+(accuacy, la proporción de elementos bien clasificados) es un métrica
+adecuada de la bondad del modelo.
 
+Ésta será la métrica que estimaremos con validación cruzada y
+compararemos con la que consiga en el conjunto de test.
 
-\subsection{Ajuste del modelo}
+También podemos visualizar la matriz de confusión (figuras
+\ref{fig:conf-train} y \ref{fig:conf-test}). Es una matriz cuadrada de
+orden el número de clases con números naturales como entradas, en la
+que el valor de la posición $(i,j)$ representa el número de ejemplos
+de la clase $i$-ésima que han sido clasificados por el modelo como
+elementos de la clase $j$-ésima. Claramente interesa que la matriz de
+confusión sea diagonal, ya que las entradas de la forma $(i,i)$
+representan éxitos a la hora de clasificar y las entradas $(i,j)$ con
+$j\neq i$ representan errores. De hecho, la accuracy se obtiene
+dividiendo la traza de la matriz de confusión (el número de ejemplos
+bien clasificados) entre el número total de ejemplos.
+
+\subsection{Técnica de ajuste del modelo}
+
+Aunque la métrica usada es la precisión, el modelo que usamos es el de
+Regresión Logística Multietiqueta para estimar la probabilidad de
+pertenencia a cada clase (la regla de clasificación será SoftMax),
+minimizamos la Pérdida Logarítmica. \vspace{-2mm}
+\[E(\textbf{w})=E(\textbf{w}_1,\ldots,\textbf{w}_K)=\frac{-1}{N}\sum_{n=1}^N\sum_{k=1}^{K}y_{nk}\ln\sigma(\textbf{w}_k^T \textbf{x}_n)\]
+Donde cada $\textbf{w}_k$ es la fila $k$-ésima de una matriz de pesos
+\textbf{w} de dimensión $K\times d$, con $K$ el número de clases (10)
+y $d$ el número de características (312). Y las etiquetas $y_n$ están
+codificadas como vectores one-hot ($y_{nk}=1$ si $y_n$ corresponde a
+la clase $k$ y 0 en caso contrario).
+
+Para minimizar esta función de pérdida utilizamos el algoritmo de
+Gradiente Descendente Estocástico, en otras ocasiones ya hemos
+comprobado su eficiacia a la hora de minimizar este tipo de funciones.
+De hecho el motivo de que usemos esta función de pérdida y no la
+proporción de fallos (1-accuracy) es la comodidad que tiene esta
+función para minimizarla con esta técnica. Puedo calcular fácilmente
+el gradiente respecto a cada una de las filas de la matriz \textbf{w}.\vspace{-2mm}
+\[\nabla_{\textbf{w}_j}E(\textbf{w}_1,\ldots,\textbf{w}_K)=\frac{1}{N}\sum_{n=1}^N(\sigma(\textbf{w}_j^T \textbf{x}_n)-y_{nj})\textbf{x}_n\]\vspace{-4mm}
+
+Necesito elegir un learning rate $\eta$ y un tamaño de minibatch
+adecuados, estos son hiperparámetros del modelo que discutieremos más
+adelante.
 
 \subsection{Regularización}
 
+Las funciones cuadráticas que hemos introducido añaden un número
+elevado de características y bastante complejidad al modelo, lo que lo
+hace propenso al sobreajuste. Para evitar esto, debemos introducir
+algún tipo de regularización.
+
+En el preprocesado hemos eliminado bastantes atributos que no
+aportaban apenas información sobre la variabilidad de la muestra,
+luego cabe esperar que la mayoría de atributos que hemos seleccionado
+sean relevantes. Es por ello que utilizaremos la Regularización Ridge,
+reduciendo el cuadrado de la norma euclídea o norma de Frobenius de la
+matriz de pesos \textbf{w}. La función de pérdida queda ahora
+\vspace{-2mm}
+\[E_{aug}(\textbf{w})=E(\textbf{w})+\lambda
+  \|\textbf{w}\|_2^2\]\vspace{-2mm} donde
+$\|\textbf{w}\|_2^2=\sum\limits_{k=1}^K\sum\limits_{j=1}^d
+\textbf{w}_{kj}^2$ y $\lambda$ es un hiperparámetro del modelo sobre
+el que hablaremos más adelante.
+
+Esta fórmula es fácil de derivar, obteniendo \vspace{-2mm}
+\[\nabla_{\textbf{w}_j}E_{aug}(\textbf{w})=\nabla_{\textbf{w}_j}E(\textbf{w})+\lambda 2\textbf{w}_j\]
+
 \subsection{Modelos}
+
+Como ya hemos comentado, usaremos un modelo de Regresión Logística
+multiclase, ya que es el más adecuado de los modelos lineales que
+conocemos para resolver un problema de clasificación no binario.
+
+El modelo nos permite estimar para una instancia la probabilidad de
+pertenencia a cada clase $j=1,\ldots,K$ mediante la fórmula:
+\[P(y=j|\textbf{x})=\frac{e^{\textbf{w}_j \textbf{x}}}{\sum_{k=1}^K
+    e^{\textbf{w}_k \textbf{x}}}\] A la hora de predecir utilizaremos
+la regla SoftMax, que para una instancia \textbf{x} predice la
+clase con mayor probabilidad.
+
+Para aprovechar varias funcionalidades de \textit{sklearn},
+implementamos nuestro propio objeto estimador (heredando de la clase
+BaseEstimator) que depende de los hiperparámetros que hemos comentado
+anteriormente. Debemos implementar como mínimo los métodos
+\texttt{fit} y \texttt{predict}, \texttt{fit} recibe los datos de
+entrenamiento y ajusta la matriz de pesos \textbf{w} minimizando la
+Pérdida Logarítmica aumentada con SGD; \texttt{predict} recibe una
+instancia y aplica la regla SoftMax para determinar la clase a la que
+pertenece.
+
+Para evitar que el entrenamiento sea computacionalmente muy costoso,
+he limitado el número de evaluaciones totales a 50000, a la hora de
+aprender los datos se agrupan según el tamaño de minibatch. Esto
+quiere decir que si el tamaño de minibatch es el doble, se realizarán
+la mitad de iteraciones.
+
+Esto no significa que no tengamos que discutir sobre el mejor modelo a
+usar, ya que el modelo depende de varios hiperparámetros que
+determinan su comportamiento y debemos estimar valores adecuados para
+ellos.
 
 \subsection{Estimación de hiperparámetros y selección del modelo}
 
-\subsection{Estimación de $E_{out}$}
+Para decidir el mejor modelo debemos estimar los hiperparámetros, para
+ello utilizamos GridSearchCV, que realiza una búsqueda exhaustiva en
+rejilla probando todas las combinaciones de hiperparámetros en un
+rango que determinamos. Para decidir qué combinación de parámetros es
+mejor implementamos el método \texttt{score} en nuestro estimador, que
+calcula el accuracy sobre un conjunto de datos. El algoritmo evalúa
+cada combinación usando Cross Validation con 5 subdivisiones, esto es
+tremendamente costoso (incluso paralelizando) por lo que lo omitimos
+en la versión final del código (se controla con la variable booleana
+PARAMSELECT).
+
+Tras algunas horas de búsqueda, la combinación que mejor score ha
+presentado entre las que he probado es $\lambda=0.007391304347826088$,
+$\eta=0.001$, tamaño de minibathch = 1. Parece que lo más efectivo es
+hacer un gran número de iteraciones con un sólo dato y una tasa de
+aprendizaje baja. Con estos hiperparámetros, la precisión media de las
+5 validaciones ha sido 0.9675642473394245, más que aceptable.
+
+Por tanto, fijamos estos hiperparámetros y seleccionamos éste como el
+mejor modelo. Primero medimos su efectividad sobre el conjunto de
+training.
+
+Pérdida logarítmica (aumentada) en la muestra: 0.6220026439186417 \\
+Precisión sobre train: 0.9777661522364635
+
+Matriz de confusión en la prueba sobre el conjunto de entrenamiento:
+\vspace{-4mm}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=100mm]{imgs/conf-train.png}
+  \caption{Matriz de confusión en la prueba con los datos de
+    entrenamiento}
+  \label{fig:conf-train}
+\end{figure}
+\vspace{-4mm}
+
+Tiene una precisión muy cercana a 1, más que su score en la selección
+de modelos, ya que estos datos son los que he usado para entrenar el
+modelo. La matriz de confusión es prácticamente diagonal, falla sobre
+todo en algunas instancias de los dígitos 8 y 9 que ha clasificado
+como unos.
+
+\subsection{Estimación de $E_{out}$ por validación cruzada y
+  comparación con $E_{test}$}
+
+En lugar de error he considerado la precisión, que es una medida de
+bondad. Usando la función \texttt{cross\_val\_score} de
+\textit{sklearn} obtenemos una estimación por validación cruzada de la
+precisión del modelo. Realiza 10 subdivisiones del conjunto de
+entrenamiento, por lo que necesita entrenar y validar 10 veces. Este
+proceso es algo lento, pero la función permite paralelizarlo. La
+precisión media que he obtenido en las 10 validaciones es
+$E_{cv} = 0.964162098615231$.
+
+Primero sacamos tres muestras aleatorias del conjunto de test, en
+las tres el modelo ha dado con la clase correcta.
+
+\vspace{-5mm}
+\begin{figure}[H]
+  \centering
+  \subfigure[Instancia correspondiente al 3]{\includegraphics[width=57.5mm]{imgs/test1.png}}
+  \subfigure[Instancia correspondiente al 5]{\includegraphics[width=57.5mm]{imgs/test2.png}}
+  \subfigure[Instancia correspondiente al 0]{\includegraphics[width=57.5mm]{imgs/test3.png}}
+  \caption{Algunas instancias de los datos}
+  \label{fig:tests-samples}
+\end{figure}
+\vspace{-5mm}
+
+Evaluamos ya el modelo sobre el conjunto de test.
+
+Pérdida logarítmica (aumentada) en test: 0.6327756996166487 \\
+Precisión sobre test: 0.9549248747913188
+
+Matriz de confusión en la prueba sobre el conjunto de test:
+\vspace{-4mm}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=100mm]{imgs/conf-test.png}
+  \caption{Matriz de confusión en la prueba con los datos de test}
+  \label{fig:conf-test}
+\end{figure}
+\vspace{-4mm}
+
+La precisión obtenida sobre el conjunto de test es ligeramente menor
+que la estimación realizada por validación cruzada. Esto se debe a la
+razón que comenté en la sección \ref{cv-optimistic} de que la
+validación y el entrenamiento se realizan sobre datos correspondientes
+a dígitos trazados por las mismas 30 personas y los dígitos tienden a
+ser más parecidos entre ellos que los de test, que están trazados por
+otras 13 personas diferentes.
+
+No obstante, la precisión obtenida es aceptable. Tampoco podemos
+optar a mucha más precisión puesto que hemos renunciado a algo más del
+2.5\% de información sobre la variabilidad de la muestra para
+simplificar los datos durante el preprocesamiento.
+
+El modelo falla sobre todo al clasificar algunos ochos como unos, lo
+que también ocurría en la prueba con los datos de entrenamiento.
 
 \subsection{Conclusiones}
 
