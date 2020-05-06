@@ -3,11 +3,10 @@
 
 # Variables ajustables:
 
-NSAMPLES=0 # Vara visualizar algunos datos
+NSAMPLES=2 # Vara visualizar algunos datos
 
 VISUALIZE2D=True # Para la visualización de los datos en 2D (tarda un poco)
 
-PREPROCESSING=True # Preprocesado de los datos, para poder comparar la mejora que supone
 VARTHRESHOLD=0.005 # Umbral de varianza por debajo del cual elimino la característica
 POLY=2 # Grado de las características polinomiales (poner 1 o 2)
 VARPCA=0.975 # Porcentaje de variabilidad de la distribución que deben explicar las características que no elimine
@@ -25,7 +24,7 @@ MINIBATCH_SIZE_RANGE=[1,4,8,16,32] # Posibles valores para el tamaño de minibat
 
 V_FOLD = 10 # Subdivisiones para Cross-Validation
 
-PRUEBAS = 3  # Número de pruebas detalladas del modelo sobre el conjunto de test
+PRUEBAS = 0  # Número de pruebas detalladas del modelo sobre el conjunto de test
 
 # Rutas a los ficheros de datos
 TRAIN='datos/optdigits.tra'
@@ -48,8 +47,6 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn import preprocessing
 from sklearn import metrics
 from sklearn import model_selection
-
-from itertools import product
 
 
 # Fijo la semilla
@@ -136,7 +133,7 @@ def E(w, x, y, lmbd = 0):
             t = sigm(np.dot(w[k],x[n]))
             e -= y[n,k]*np.log(t)
 
-    return e/N + lmbd*np.linalg.norm(w)**2 # Ein + penalización reg
+    return e/N + lmbd*np.linalg.norm(w)**2/N # E + penalización reg
 
 # Gradiente respecto al vector wj
 # permite añadir regularización
@@ -165,9 +162,10 @@ def classificationScore(y, pred, set_name):
 
     return accuracy
 
+
 # Clasificador: realiza Regresión Logística multietiqueta
 # y predice con SoftMax
-class classifierLR(BaseEstimator):
+class ClassifierLR(BaseEstimator):
 
     def __init__(self, lr, minibatch_size=MINIBATCH_SIZE, lmbd=0, wini=None):
 
@@ -257,6 +255,7 @@ if __name__ == "__main__":
 
         input("\n--- Pulsar tecla para continuar ---\n")
 
+
     # Visualización de los datos en 2D
     if VISUALIZE2D:
 
@@ -276,57 +275,60 @@ if __name__ == "__main__":
         input("\n--- Pulsar tecla para continuar ---\n")
 
     # Preprocesado
-    if PREPROCESSING:
 
-        # Matriz de coeficientes de Pearson para ver la correlación entre los datos
-        # (necesito eliminar las características con varianza 0 para poder computarlos)
-        x_1 = VarianceThreshold().fit_transform(x)
+    # Matriz de coeficientes de Pearson para ver la correlación entre los datos
+    # (necesito eliminar las características con varianza 0 para poder computarlos)
+    x_1 = VarianceThreshold().fit_transform(x)
+    corr_m = np.corrcoef(np.transpose(x_1))
 
-        corr_m = np.corrcoef(np.transpose(x_1))
+    print('Matriz de coeficientes de correlación de Pearson antes del preprocesado (eliminadas características con varianza 0)')
 
-        print('Matriz de coeficientes de correlación de Pearson antes del preprocesado (eliminadas características con varianza 0)')
+    visualizeMatrix(corr_m, 'Matriz de coeficientes de Pearson\nde las características (sin las de varianza 0)')
 
-        visualizeMatrix(corr_m, 'Matriz de coeficientes de Pearson\nde las características (sin las de varianza 0)')
+    input("\n--- Pulsar tecla para continuar ---\n")
 
-        input("\n--- Pulsar tecla para continuar ---\n")
+    print('Preprocesado:\n')
 
-        print('Preprocesado:\n')
+    # Elimina las características con baja varianza
+    selector = VarianceThreshold(VARTHRESHOLD)
 
-        # Elimina las características con baja varianza
-        selector = VarianceThreshold(VARTHRESHOLD)
+    # Introducción de características polinomiales
+    poly=preprocessing.PolynomialFeatures(POLY)
 
-        # Introducción de características polinomiales
-        poly=preprocessing.PolynomialFeatures(POLY)
+    # Escala las características para dejarlas con media 0 y varianza 1
+    scaler = preprocessing.StandardScaler()
 
-        # Escala las características para dejarlas con media 0 y varianza 1
-        scaler = preprocessing.StandardScaler()
+    # Escoge un subconjunto de características que explican cierto porcentaje de la variabilidad de la  distribución
+    pca = PCA(n_components=VARPCA)
 
-        # Escoge un subconjunto de características que explican cierto porcentaje de la variabilidad de la  distribución
-        pca = PCA(n_components=VARPCA)
+    # Guardo el preprocesado en un pipeline para aplicarlo tanto a train como a test
+    pipln = Pipeline([('selector',selector),('poly',poly),('scaler',scaler),('PCA',pca)])
 
-        # Guardo el preprocesado en un pipeline para aplicarlo tanto a train como a test
-        pipln = Pipeline([('selector',selector),('poly',poly),('scaler',scaler),('PCA',pca)])
+    pipln.fit(x) # Lo ajusto con train
 
-        pipln.fit(x) # Lo ajusto con train
+    print('Características:', np.shape(x)[1])
 
-        print('Características:', np.shape(x)[1])
+    x = pipln.transform(x) # Aplico las transformaciones al conjunto de entrenamiento
+    x_test = pipln.transform(x_test) # Aplico las transformaciones a los datos de test
 
-        x = pipln.transform(x) # Aplico las transformaciones al conjunto de entrenamiento
-        x_test = pipln.transform(x_test) # Aplico las transformaciones a los datos de test
+    # Añado x_0=1 para ajustar el término independiente
+    x=np.hstack((np.ones((len(x),1)),x))
+    x_test=np.hstack((np.ones((len(x_test),1)),x_test))
         
-        print('Tras preprocesado:', np.shape(x)[1])
+    print('Tras preprocesado:', np.shape(x)[1])
         
-        input("\n--- Pulsar tecla para continuar ---\n")
+    input("\n--- Pulsar tecla para continuar ---\n")
 
-        corr_m = np.corrcoef(np.transpose(x))
-        print('Matriz de coeficientes de correlación de Pearson tras el preprocesado')
-        visualizeMatrix(corr_m, 'Matriz de coeficientes de Pearson\n de las características tras preprocesado')
+    corr_m = np.corrcoef(np.transpose(x))
+    print('Matriz de coeficientes de correlación de Pearson tras el preprocesado')
+    visualizeMatrix(corr_m, 'Matriz de coeficientes de Pearson\n de las características tras preprocesado')
 
-        input("\n--- Pulsar tecla para continuar ---\n")
+    input("\n--- Pulsar tecla para continuar ---\n")
+    
 
     # Clasificación multietiqueta: SoftMax
     print('Regresión Logística Multietiqueta\n')
-    clr = classifierLR(LR, MINIBATCH_SIZE, LMBD)
+    clr = ClassifierLR(LR, MINIBATCH_SIZE, LMBD)
     
     # Ajustar hiperparámetros
     if PARAMSELECT:
@@ -355,10 +357,11 @@ if __name__ == "__main__":
     print('Validación cruzada del modelo ...')
     Ecv=model_selection.cross_val_score(clr,x,y,cv=V_FOLD,n_jobs=-1) 
     print('Ecv =',np.mean(Ecv))
-
+    
     input("\n--- Pulsar tecla para continuar ---\n")
 
     # Hacemos algunas pruebas sobre el conjunto de test
+    clr.fit(x,y) # Entreno el modelo con todos los datos
     if PRUEBAS > 0:
         print('Pruebas sobre test:\n')
     for _ in range(PRUEBAS):
@@ -377,4 +380,4 @@ if __name__ == "__main__":
     # Medimos la bondad del resultado
     classificationScore(y_test, pred_test, 'test')
     
-    input("\n--- Pulsar tecla para continuar ---\n")
+    input("\n--- Pulsar tecla para salir ---\n")

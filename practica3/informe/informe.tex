@@ -141,6 +141,8 @@ Cross-Validation sea demasiado optimista, por ser los datos de
 validación correspondientes a las mismas personas que los de
 entrenamiento. \label{cv-optimistic}
 
+No separamos un conjunto de validación, ya que para decidir cuál es el
+mejor modelo usaremos validación cruzada.
 
 \subsection{Clases de funciones a usar y Preprocesamiento}
 
@@ -206,7 +208,7 @@ Mirando el fichero \texttt{opdigits.names} percibimos que el número de
 ejemplos de cada clase está balanceado tanto en training (entre 376 y
 389) como en test (entre 174 y 183). En esta situación, la precisión
 (accuacy, la proporción de elementos bien clasificados) es un métrica
-adecuada de la bondad del modelo.
+adecuada de la bondad del modelo, además de fácil de interpretar.
 
 Ésta será la métrica que estimaremos con validación cruzada y
 compararemos con la que consiga en el conjunto de test.
@@ -360,7 +362,7 @@ precisión del modelo. Realiza 10 subdivisiones del conjunto de
 entrenamiento, por lo que necesita entrenar y validar 10 veces. Este
 proceso es algo lento, pero la función permite paralelizarlo. La
 precisión media que he obtenido en las 10 validaciones es
-$E_{cv} = 0.964162098615231$.
+$E_{cv} = 0.9633781252990309$.
 
 Primero sacamos tres muestras aleatorias del conjunto de test, en
 las tres el modelo ha dado con la clase correcta.
@@ -378,8 +380,8 @@ las tres el modelo ha dado con la clase correcta.
 
 Evaluamos ya el modelo sobre el conjunto de test.
 
-Pérdida logarítmica (aumentada) en test: 0.6327756996166487 \\
-Precisión sobre test: 0.9549248747913188
+Pérdida logarítmica (aumentada) en test: 0.6330322207401309 \\
+Precisión sobre test: 0.9560378408458542
 
 Matriz de confusión en la prueba sobre el conjunto de test:
 \vspace{-4mm}
@@ -408,5 +410,15 @@ El modelo falla sobre todo al clasificar algunos ochos como unos, lo
 que también ocurría en la prueba con los datos de entrenamiento.
 
 \subsection{Conclusiones}
+
+\section{Predicción de crímenes violentos per cápita}
+
+\subsection{Problema}
+
+128 atributos
+1 objetivo
+122 predictivos
+- 22 tienen más del 70\% de valores perdidos: las elimino
+- 1 tiene un valor perdido: lo relleno con KNN
 
 \end{document}
