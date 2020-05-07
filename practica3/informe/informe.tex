@@ -332,8 +332,8 @@ Por tanto, fijamos estos hiperparámetros y seleccionamos éste como el
 mejor modelo. Primero medimos su efectividad sobre el conjunto de
 training.
 
-Pérdida logarítmica (aumentada) en la muestra: 0.6220026439186417 \\
-Precisión sobre train: 0.9777661522364635
+Pérdida logarítmica (aumentada) en la muestra: 0.0439686123874305 \\
+Precisión sobre train: 0.9895370128171593
 
 Matriz de confusión en la prueba sobre el conjunto de entrenamiento:
 \vspace{-4mm}
@@ -362,7 +362,7 @@ precisión del modelo. Realiza 10 subdivisiones del conjunto de
 entrenamiento, por lo que necesita entrenar y validar 10 veces. Este
 proceso es algo lento, pero la función permite paralelizarlo. La
 precisión media que he obtenido en las 10 validaciones es
-$E_{cv} = 0.9633781252990309$.
+$E_{cv} = 0.976982488756442$ (este valor varía entre ejecuciones).
 
 Primero sacamos tres muestras aleatorias del conjunto de test, en
 las tres el modelo ha dado con la clase correcta.
@@ -380,8 +380,8 @@ las tres el modelo ha dado con la clase correcta.
 
 Evaluamos ya el modelo sobre el conjunto de test.
 
-Pérdida logarítmica (aumentada) en test: 0.6330322207401309 \\
-Precisión sobre test: 0.9560378408458542
+Pérdida logarítmica (aumentada) en test: 0.08600667100019206 \\
+Precisión sobre test: 0.9671675013912076
 
 Matriz de confusión en la prueba sobre el conjunto de test:
 \vspace{-4mm}
@@ -411,6 +411,53 @@ que también ocurría en la prueba con los datos de entrenamiento.
 
 \subsection{Conclusiones}
 
+Para comparar utilizamos el clasificador por KNN de
+\textit{sklearn}, que predice la clase de un elemento según la clase
+que más abunde entre sus 5 vecinos más cercanos del conjunto de
+entrenamiento.
+
+En el fichero \texttt{opdigits.names} asegura que este algoritmo
+consigue una precisión mayor que la de nuestro modelo, lo
+comprobaremos.
+
+Sobre los datos procesados de test el algoritmo ha obtenido una
+precisión de 0.9577072899276572, algo más baja que la de mi modelo.
+Esto nos indica que sobre los datos procesados nuestro modelo es más
+que decente.
+
+Sin embargo, sobre los datos de test sin procesar el algoritmo KNN ha
+obtendio una precisión de 0.9788536449638287 (corresponde a lo
+indicado en \texttt{opdigits.names}), más alta que nuestro
+clasificador por regresión logística. Esto podría significar que hemos
+cometido un error al preprocesar los datos, pero tras probar nuestro
+modelo de regresión logística con los datos sin preprocesar concluimos
+que el preprocesado supone una importante mejora (accuracy Cross
+Validation: 0.9495174497286509, accuracy test: 0.9454646633277685),
+luego el preprocesar los datos ha sido una decisión acertada de cara a
+la eficacia del modelo lineal usado.
+
+Concluimos que el modelo elegido no es el mejor, pero tiene buena
+calidad. Sí que ha proporcionado la mejor precisión entre las
+distintas posibilidades exploradas (variando los hiperparámetros).
+
+En un caso real de que nos hubiesen encargado un modelo que resolviese
+este problema hubiesemos proporcionado este modelo con la precisión
+obtenida por validación cruzada. Tendríamos que advertir de que esa
+precisión se ha estimado usando un conjunto de validación disjunto del
+de entrenamiento, pero con datos correspondientes a números trazados
+con las mismas personas, y que esto podría provocar que la precisión
+del modelo sea menor en datos correspondiéntes a dígitos trazados por
+personas distintas. De no haber hecho esta advertencia y limitarnos a
+devolver el modelo y la estimación de la precisión por validación
+cruzada, habríamos cometido el error de ofrecer una estimación de la
+bondad del modelo demasiado optimista.
+
+Para poder probar la bondad real del modelo hemos necesitado el
+conjunto de test, que es probable que en un problema real no
+tuviésemos. Se podría paliar este problema si en los datos
+proporcionados nos proporcionasen los datos separados por la
+persona que trazó el dígito, pero no ha sido el caso.
+
 \section{Predicción de crímenes violentos per cápita}
 
 \subsection{Problema}
@@ -420,5 +467,10 @@ que también ocurría en la prueba con los datos de entrenamiento.
 122 predictivos
 - 22 tienen más del 70\% de valores perdidos: las elimino
 - 1 tiene un valor perdido: lo relleno con KNN
+
+\subsection{Métrica}
+
+El MSE es mejor que el MAE porque los outliers ya han sido
+normalizados
 
 \end{document}

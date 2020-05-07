@@ -3,9 +3,9 @@
 
 # Variables ajustables:
 
-NSAMPLES=2 # Vara visualizar algunos datos
+NSAMPLES=3 # Vara visualizar algunos datos
 
-VISUALIZE2D=True # Para la visualización de los datos en 2D (tarda un poco)
+VISUALIZE2D=False # Para la visualización de los datos en 2D (tarda un poco)
 
 VARTHRESHOLD=0.005 # Umbral de varianza por debajo del cual elimino la característica
 POLY=2 # Grado de las características polinomiales (poner 1 o 2)
@@ -24,7 +24,7 @@ MINIBATCH_SIZE_RANGE=[1,4,8,16,32] # Posibles valores para el tamaño de minibat
 
 V_FOLD = 10 # Subdivisiones para Cross-Validation
 
-PRUEBAS = 0  # Número de pruebas detalladas del modelo sobre el conjunto de test
+PRUEBAS = 2  # Número de pruebas detalladas del modelo sobre el conjunto de test
 
 # Rutas a los ficheros de datos
 TRAIN='datos/optdigits.tra'
@@ -47,6 +47,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn import preprocessing
 from sklearn import metrics
 from sklearn import model_selection
+from sklearn.neighbors import KNeighborsClassifier
 
 
 # Fijo la semilla
@@ -241,6 +242,13 @@ if __name__ == "__main__":
     x, y = readData(TRAIN) # Lee datos de entrenamiento
     x_test, y_test = readData(TEST) # Lee datos de test
 
+    """
+    print('Comparación con KNN')
+    knn=KNeighborsClassifier()
+    knn.fit(x,y)
+    print('KNN accuracy:',knn.score(x_test,y_test))
+    """
+
     x_matrix = matrixData(x)
     x_matrix_test = matrixData(x_test)
 
@@ -275,7 +283,7 @@ if __name__ == "__main__":
         input("\n--- Pulsar tecla para continuar ---\n")
 
     # Preprocesado
-
+    
     # Matriz de coeficientes de Pearson para ver la correlación entre los datos
     # (necesito eliminar las características con varianza 0 para poder computarlos)
     x_1 = VarianceThreshold().fit_transform(x)
@@ -310,10 +318,6 @@ if __name__ == "__main__":
 
     x = pipln.transform(x) # Aplico las transformaciones al conjunto de entrenamiento
     x_test = pipln.transform(x_test) # Aplico las transformaciones a los datos de test
-
-    # Añado x_0=1 para ajustar el término independiente
-    x=np.hstack((np.ones((len(x),1)),x))
-    x_test=np.hstack((np.ones((len(x_test),1)),x_test))
         
     print('Tras preprocesado:', np.shape(x)[1])
         
@@ -329,6 +333,10 @@ if __name__ == "__main__":
     # Clasificación multietiqueta: SoftMax
     print('Regresión Logística Multietiqueta\n')
     clr = ClassifierLR(LR, MINIBATCH_SIZE, LMBD)
+
+    # Añado x_0=1 para ajustar el término independiente
+    x=np.hstack((np.ones((len(x),1)),x))
+    x_test=np.hstack((np.ones((len(x_test),1)),x_test))
     
     # Ajustar hiperparámetros
     if PARAMSELECT:
@@ -340,6 +348,8 @@ if __name__ == "__main__":
         print('Mejores parámetros:', search.best_params_)
         print('Mejor puntuación:', search.best_score_)
         clr.set_params(**(search.best_params_)) # Ajusto los parámetos
+
+        input("\n--- Pulsar tecla para continuar ---\n")
 
     # Gradiente descendiente estocástico para ajustar el modelo
     print('Entrenando modelo con SGD ...')
@@ -379,5 +389,13 @@ if __name__ == "__main__":
     pred_test = clr.predict(x_test)
     # Medimos la bondad del resultado
     classificationScore(y_test, pred_test, 'test')
+
+    input("\n--- Pulsar tecla para continuar ---\n")
+
+    # Comparación con KNN
+    print('Comparación con KNN')
+    knn=KNeighborsClassifier()
+    knn.fit(x,y)
+    print('KNN accuracy:',knn.score(x_test,y_test))
     
     input("\n--- Pulsar tecla para salir ---\n")
