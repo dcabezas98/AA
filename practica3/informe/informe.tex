@@ -332,7 +332,7 @@ Por tanto, fijamos estos hiperparámetros y seleccionamos éste como el
 mejor modelo. Primero medimos su efectividad sobre el conjunto de
 training.
 
-Pérdida logarítmica (aumentada) en la muestra: 0.0439686123874305 \\
+Pérdida logarítmica (aumentada) en la muestra: 0.04396861238743053 \\
 Precisión sobre train: 0.9895370128171593
 
 Matriz de confusión en la prueba sobre el conjunto de entrenamiento:
@@ -362,7 +362,7 @@ precisión del modelo. Realiza 10 subdivisiones del conjunto de
 entrenamiento, por lo que necesita entrenar y validar 10 veces. Este
 proceso es algo lento, pero la función permite paralelizarlo. La
 precisión media que he obtenido en las 10 validaciones es
-$E_{cv} = 0.976982488756442$ (este valor varía entre ejecuciones).
+$E_{cv} = 0.9764602955449538$ (este valor varía entre ejecuciones).
 
 Primero sacamos tres muestras aleatorias del conjunto de test, en
 las tres el modelo ha dado con la clase correcta.
@@ -380,7 +380,7 @@ las tres el modelo ha dado con la clase correcta.
 
 Evaluamos ya el modelo sobre el conjunto de test.
 
-Pérdida logarítmica (aumentada) en test: 0.08600667100019206 \\
+Pérdida logarítmica (aumentada) en test: 0.08595584205059877 \\
 Precisión sobre test: 0.9671675013912076
 
 Matriz de confusión en la prueba sobre el conjunto de test:
@@ -456,21 +456,198 @@ Para poder probar la bondad real del modelo hemos necesitado el
 conjunto de test, que es probable que en un problema real no
 tuviésemos. Se podría paliar este problema si en los datos
 proporcionados nos proporcionasen los datos separados por la
-persona que trazó el dígito, pero no ha sido el caso.
+persona que trazó el dígito, pero no era el sido el caso.
 
 \section{Predicción de crímenes violentos per cápita}
 
 \subsection{Problema}
 
-128 atributos
-1 objetivo
-122 predictivos
-- 22 tienen más del 70\% de valores perdidos: las elimino
-- 1 tiene un valor perdido: lo relleno con KNN
+Queremos predecir el número de crímenes violentos por cada 100.000
+habitantes en distantas comunidades. Disponemos de un conjunto de
+datos que incluye variables como porcentajes de población en un rango
+de edad, con un determinado nivel de estudios, perteneciente a cierta
+raza, que ha emigrdo\ldots También sobre las rentas, el desempleo, el
+número de policías por cada $x$ habitantes\ldots
+
+Claramente podemos plantear este problema como un problema de
+Regresión Lineal y entrenar un modelo para predecir la variable
+objetivo con datos de los que disponemos.
+
+Todas las variables (numéricas) han sido normalizadas entre 0 y 1,
+manteniendo su distribución y simetría/asimetría. La normalización
+colapsa los outliers a 0 o 1 (según si estan muy por debajo o por
+encima del resto), por lo que no tenemos que preocuparnos por la
+existencia de outliers. Sí debemos tener en cuenta que esta
+normalización preserva los ratios entre valores del mismo atributo,
+pero no entre atributos, no tiene sentido comparar dos atributos
+diferentes.
+
+Podemos encontrar toda la información sobre los datos en el fichero
+\texttt{communities.names}, esto lo tendremos en cuenta para gestionar
+el problema de la existencia de valores perdidos. En total hay 127
+variables + la variable objetivo, de estas 127 sólo hay 122
+predictivas, así que desechamos el resto.
+
+Entre las variables restantes, 22 de ellas presentan un gran
+porcentaje (84\%) de valores perdidos, tendremos que decidir qué
+hacemos con ellas.
+
+La población $X$ constituye el conjunto de valores normalizados entre
+0 y 1 de las variables correspondientes a una comunidad; $Y$ es el
+conjunto de posibles números de crímenes violentos normalizados (esto
+no quiere decir que estén entre 0 y 1, como explicamos en el siguiente
+párrafo); y la función objetivo $f$ es la que asigna a cada vector de
+$X$ el número de crímenes violentos en la comunidad que representa
+normalizado entre 0 y 1.
+
+Con esta normalización sobre la variable objetivo debemos tener
+cuidado, ya que ante la aparición de un nuevo dato para el cual el
+modelo predice un índice de criminalidad superior al mayor de entre
+las comunidades de los datos que tenemos (predeciría $y>1$) puede no
+ser adecuado interpretar el valor como 1. Ya que esto desecha
+información sobre comunidades con mayor tasa de crímenes violentos que
+las de los datos. Es por ello que permitiremos que nuestro modelo
+prediga valores de $y$ superiores a 1.
+
+Tras gestionar los valores perdidos en el preprocesamiento, podemos
+visualizar los datos. He usado la misma técnica que antes: PCA + TSNE
+
+\vspace{-4mm}
+\begin{figure}[H]
+  \centering
+  \subfigure[Proyección 2D mediante PCA]{\includegraphics[width=87mm]{imgs/com_2dPCA.png}}
+  \subfigure[Proyección 2D mediante T-SNE]{\includegraphics[width=87mm]{imgs/com_2dTSNE.png}}
+  \caption{Visualización en 2D de los datos}
+  \label{fig:com_2D-projection}
+\end{figure}
+\vspace{-4mm}
+
+Se aprecia que los datos correspondientes a comunidades con diferente
+índice de criminalidad no están demasiado entremezclados.
+
+\subsection{Conjuntos de training y test}
+
+A diferencia del otro problema, en este caso no se nos proporciona un
+conjunto de test separado, por lo que debemos extraerlo del conjunto
+de train. Lo hacemos con la función \texttt{train\_test\_split} de
+\textit{sklearn}, y elegimos 75\% de datos para train y 25\% para test
+de forma aleatoria.
+
+\subsection{Clases de funciones a usar y Preprocesamiento}
+
+Por la misma razón que antes usamos polinomios de grado 2 y los
+introducimos en medio del preprocesamiento.
+
+Además de eliminar las variables no predictivas, realizamos las
+siguientes tareas:
+
+Primero debemos decidir qué hacer con los valores perdidos, puesto que
+no son demasiadas variables las que presentan valores perdidos y en
+ellas la proporción de valores perdidos es relativamente alta (84\%),
+mi primera decisión fue eliminar dichas variables, quedandome con 100.
+Para ello he usado la función \texttt{dropna} de \texttt{pandas}, para
+desechar los atributos con más del 50\% de valores perdidos. El Error
+Cuatrático Medio obtenido con validación cruzada bajo esta decisión ha
+sido $E_{cv} = 0.02356922860102622$.
+
+En el caso de no eliminarlas (o por si queda alguna con el 50\% o
+menos de valores perdidos), tenemos que estimarlas de alguna
+forma. Para ello usaremos KNNImputer de \texttt{sklearn}, que estima
+cada valor perdido promediando los de los 5 vecinos (que tienen el
+valor) más cercanos en la distancia euclídea (atendiendo a la
+características sin valores perdidos), da más peso a los vecinos más
+cercanos. Aplicamos esto tanto en train (fit y transform) como en test
+(sólo transform).
+
+Si en lugar de eliminar las características con demasiados (>50\%)
+datos perdidos, las interpolamos con KNNImputer, el ECM que obtenemos
+en validación es $E_{cv} = 0.027620319480671656$, por lo que
+mantenemos la decisión de eliminarlas.
+
+A continuación aplicamos (también en un Pipeline) las mismas
+transformaciones que el problema anterior: eliminamos variables con
+baja varianza (<0.005), añadimos características polinomiales de grado
+2, escalamos a media 0 y varianza 1 y elegimos el menor número de
+variables que expliquen el 99\% de la variabilidad de la distribución.
+Nos quedamos con 260 atributos, perfectamente manejable.
+
+Al igual que antes, visualizamos la matriz de coeficientes de
+correlación de Pearson antes (pero ya sin valores perdidos) y después
+del preprocesamiento. Comprobamos que queda diagonal.
+
+\vspace{-4mm}
+\begin{figure}[H]
+  \centering
+  \subfigure[Antes del preprocesado]{\includegraphics[width=87mm]{imgs/com_pearsonRaw.png}}
+  \subfigure[Después del preprocesado]{\includegraphics[width=87mm]{imgs/com_pearsonPre.png}}
+  \caption{Matrices de coeficientes de correlación de Pearson}
+  \label{fig:com_pearson}
+\end{figure}
+\vspace{-4mm}
+
+\end{document}
 
 \subsection{Métrica}
 
 El MSE es mejor que el MAE porque los outliers ya han sido
 normalizados
+
+
+\subsection{Estimación de hiperparámetros y selección del modelo}
+
+Ajustando modelo mediante pseudoinversa ...
+ECM aumentado sobre la muestra: 4.323467888321191
+ECM sobre la muestra: 0.013243601309686465
+$R^²$= 0.7517257860345214
+
+
+\subsection{Estimación de $E_{out}$ por validación cruzada y
+  comparación con $E_{test}$}
+
+Ecv = 0.02356922860102622
+
+
+Selecciono un elemento aleatorio de test
+Objetivo: 0.32
+Predicción: 0.2428077121087347
+Diferencia: -0.07719228789126531
+
+--- Pulsar tecla para continuar ---
+
+Selecciono un elemento aleatorio de test
+Objetivo: 0.29
+Predicción: 0.37131158436817296
+Diferencia: 0.08131158436817298
+
+--- Pulsar tecla para continuar ---
+
+Selecciono un elemento aleatorio de test
+Objetivo: 0.09
+Predicción: 0.13948687744365962
+Diferencia: 0.04948687744365962
+
+--- Pulsar tecla para continuar ---
+
+Selecciono un elemento aleatorio de test
+Objetivo: 0.2
+Predicción: 0.3688994745851004
+Diferencia: 0.1688994745851004
+
+
+ECM aumentado sobre el test: 4.329183968372332
+ECM sobre el test: 0.018959681360827634
+R²= 0.6671865221163271
+
+\subsection{Conclusiones}
+
+
+Comparación con KNN
+ECM sobre test: 0.02153277755511022
+KNN R²= 0.622019038705042
+
+
+Comparación con Random Forest
+ECM sobre test: 0.023047872064128255
+KNN R²= 0.595423450769131
 
 \end{document}

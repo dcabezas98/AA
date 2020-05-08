@@ -7,7 +7,7 @@ TEST_SIZE=0.25 # Proporción de datos usados para test
 
 VISUALIZE2D=True # Para la visualización de los datos en 2D (tarda un poco)
 
-DROPNA=0.0 # Proporción mínima de valores no perdidos para mantener un atributo
+DROPNA=0.5 # Proporción mínima de valores no perdidos para mantener un atributo
 
 VARTHRESHOLD=0.005 # Umbral de varianza por debajo del cual elimino la característica
 POLY=2 # Grado de las características polinomiales (poner 1 o 2)
@@ -40,6 +40,8 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn import preprocessing
 from sklearn import metrics
 from sklearn import model_selection
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 
 # Fijo la semilla
@@ -138,7 +140,7 @@ if __name__ == "__main__":
     print('\nRelleno valores perdidos con KNN')
 
     # Estimamos valores perdidos por KNN
-    imputer = KNNImputer(missing_values=np.NaN,weights='uniform').fit(x)
+    imputer = KNNImputer(missing_values=np.NaN,weights='distance').fit(x)
     x=imputer.transform(x)
     x_test=imputer.transform(x_test)
 
@@ -242,10 +244,12 @@ if __name__ == "__main__":
     Ecv=model_selection.cross_val_score(regressor,x,y,cv=V_FOLD,n_jobs=-1) 
     print('Ecv =',-np.mean(Ecv))
 
+    input("\n--- Pulsar tecla para continuar ---\n")
+
     # Pruebas sobre el test
     regressor.fit(x,y) # Entreno el modelo con todos los datos
     if PRUEBAS > 0:
-        print('\nPruebas sobre test:\n')
+        print('Pruebas sobre test:\n')
     for _ in range(PRUEBAS):
 
         print('Selecciono un elemento aleatorio de test')
@@ -264,5 +268,24 @@ if __name__ == "__main__":
     print('ECM sobre el test:', mse)
     print('R²=',1-mse/np.var(y_test))
 
+    input("\n--- Pulsar tecla para continuar ---\n")
+
+    # Comparación con KNN
+    print('Comparación con KNN')
+    knn= KNeighborsRegressor()
+    knn.fit(x,y)
+    pred=knn.predict(x_test)
+    print('ECM sobre test:', metrics.mean_squared_error(y_test,pred))
+    print('KNN R²=',knn.score(x_test,y_test))
+
+    input("\n--- Pulsar tecla para continuar ---\n")
+
+    # Comparación con Random Forest
+    print('Comparación con Random Forest')
+    rf = RandomForestRegressor(n_jobs=-1)
+    rf.fit(x,y)
+    pred=rf.predict(x_test)
+    print('ECM sobre test:', metrics.mean_squared_error(y_test,pred))
+    print('KNN R²=',rf.score(x_test,y_test))
 
     input("\n--- Pulsar tecla para salir ---\n")
