@@ -293,15 +293,15 @@ BaseEstimator) que depende de los hiperparámetros que hemos comentado
 anteriormente. Debemos implementar como mínimo los métodos
 \texttt{fit} y \texttt{predict}, \texttt{fit} recibe los datos de
 entrenamiento y ajusta la matriz de pesos \textbf{w} minimizando la
-Pérdida Logarítmica aumentada con SGD; \texttt{predict} recibe una
-instancia y aplica la regla SoftMax para determinar la clase a la que
-pertenece.
+Pérdida Logarítmica aumentada con SGD; \texttt{predict} recibe un
+conjunto de ejemplos y aplica la regla SoftMax para determinar la
+clase a la que pertenece cada uno.
 
 Para evitar que el entrenamiento sea computacionalmente muy costoso,
-he limitado el número de evaluaciones totales a 50000, a la hora de
-aprender los datos se agrupan según el tamaño de minibatch. Esto
-quiere decir que si el tamaño de minibatch es el doble, se realizarán
-la mitad de iteraciones.
+he limitado el número de evaluaciones totales a 50000 para el SDG, a
+la hora de aprender los datos se agrupan según el tamaño de
+minibatch. Esto quiere decir que si el tamaño de minibatch es el
+doble, se realizarán la mitad de iteraciones.
 
 Esto no significa que no tengamos que discutir sobre el mejor modelo a
 usar, ya que el modelo depende de varios hiperparámetros que
@@ -523,7 +523,11 @@ visualizar los datos. He usado la misma técnica que antes: PCA + TSNE
 \vspace{-4mm}
 
 Se aprecia que los datos correspondientes a comunidades con diferente
-índice de criminalidad no están demasiado entremezclados.
+índice de criminalidad no están demasiado entremezclados. Al ser la
+variable a predecir de carácter continuo, no podíamos esperar que los
+datos estuviesen tan separados como en el problema anterior. Pero
+tenemos una transición gradual entre los datos correspondientes a
+instancias con distinto índice de criminalidad (variable objetivo).
 
 \subsection{Conjuntos de training y test}
 
@@ -585,13 +589,55 @@ del preprocesamiento. Comprobamos que queda diagonal.
 \end{figure}
 \vspace{-4mm}
 
-\end{document}
-
 \subsection{Métrica}
 
-El MSE es mejor que el MAE porque los outliers ya han sido
-normalizados
+La función que minimizaremos es el error cuadrático medio (MSE, mean
+squared error), también será la función en la que basaremos nuestra
+elección de cuál es el mejor modelo en la fase de validación.
 
+Preferimos esta función al error absoluto medio (MAE, mean absolute
+error) porque, aunque es cierto que el MAE es más robusto ante los
+outliers, en este caso disminuye su influencia al haber sido
+normalizados. El MSE es más adecuado cuando queremos tener en cuenta
+cada uno de los datos de los que disponemos, no permite que algún dato
+tenga error demasiado alto a cambio de predecir otro con más exactitud.
+
+No obstante, aunque basemos en el MSE la elección del modelo,
+estudiamos también el coeficiente de determinación $R^2$ y lo
+comparamos con el de otros modelos a la hora de sacar conclusiones
+respecto a la calidad del modelo elegido. Debido a su fácil
+interpretación: la proporción de la variabilidad de la distribución
+que puede explicarse por el modelo.
+
+\subsection{Técnica de ajuste del modelo}
+
+Para minimizar el MSE, podemos usar el SGD o la pseudoinversa. Nos
+decantamos por esta última debido a que la matriz a invertir no tiene
+un orden excesivamente alto (tenemos 260 características + la columna
+de unos) y las operaciones matriciales en \textit{numpy} están muy
+optimizadas. Además, este algoritmo permite calcular el vector de
+pesos \textbf{w} que anula el gradiente de la función de error de
+forma casi exacta. Obtenemos:
+$\textbf{w}=\textbf{X}^+ \textbf{y}=(\textbf{X}^T
+\textbf{X})^{-1}\textbf{X}^T \textbf{y}$
+
+\subsection{Regularización}
+
+Al igual que en el problema anterior, gracias al preprocesamiento
+podemos esperar que la mayoría de atributos sean relevantes, por lo
+que utilizaremos Regularización Ridge. Esto modifica la fórmula de la
+pseudoinversa anterior, para tener en cuenta la penalización por
+regularización. Obteniendo
+$\textbf{w}_{reg}=(\textbf{X}^T \textbf{X}+\lambda I)^{-1}\textbf{X}^T
+\textbf{y}$ donde $I$ es la matriz identidad de orden $d+1$ ($d$ es el
+número de características) y $\lambda$ un hiperparámetro del modelo
+que debemos discutir más adelante.
+
+\subsection{Modelos}
+
+
+
+\end{document}
 
 \subsection{Estimación de hiperparámetros y selección del modelo}
 

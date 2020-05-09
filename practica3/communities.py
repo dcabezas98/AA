@@ -213,8 +213,6 @@ if __name__ == "__main__":
     x=np.hstack((np.ones((len(x),1)),x))
     x_test=np.hstack((np.ones((len(x_test),1)),x_test))
 
-    regressor.fit(x,y)
-
     # Ajustar hiperparámetros: en este caso sólo lambda
     if PARAMSELECT:
         print('Ajustando parámetros del modelo ...')
