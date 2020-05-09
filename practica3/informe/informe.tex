@@ -249,7 +249,8 @@ el gradiente respecto a cada una de las filas de la matriz \textbf{w}.\vspace{-2
 
 Necesito elegir un learning rate $\eta$ y un tamaño de minibatch
 adecuados, estos son hiperparámetros del modelo que discutieremos más
-adelante.
+adelante. El vector de pesos inicial es otro hiperparámetro que
+fijaremos como el vector nulo por simplicidad.
 
 \subsection{Regularización}
 
@@ -617,7 +618,9 @@ un orden excesivamente alto (tenemos 260 características + la columna
 de unos) y las operaciones matriciales en \textit{numpy} están muy
 optimizadas. Además, este algoritmo permite calcular el vector de
 pesos \textbf{w} que anula el gradiente de la función de error de
-forma casi exacta. Obtenemos:
+forma casi exacta y no precisamos estimar hiperparámetros como son el
+learning rate, el tamaño de minibatch y los pesos
+iniciales. Obtenemos:
 $\textbf{w}=\textbf{X}^+ \textbf{y}=(\textbf{X}^T
 \textbf{X})^{-1}\textbf{X}^T \textbf{y}$
 
@@ -635,17 +638,33 @@ que debemos discutir más adelante.
 
 \subsection{Modelos}
 
+El modelo que usaremos será el de Regresión Lineal para minimizar el
+Error Cuadrático Medio, el más adecuado entre los modelos lineales que
+conocemos para este problema (predecir una variable continua a partir
+de otro conjunto de variables). Como ya hemos comentado, lo
+ajustaremos con el algoritmo de la pseudoinversa añadiendo
+regularización.
 
+Para este problema también he creado un objeto estimador de
+\textit{sklearn} que ajusta el vector de pesos \textbf{w} mediante
+pseudoinversa (con regularización) para el método \texttt{fit} y
+realiza el producto escalar de un vector de atributos de entrada
+\textbf{x} por \textbf{w} para predecir la variable objetivo en el
+método \texttt{predict}.
 
-\end{document}
+En este caso sólo tenemos un hiperparámetro
+($\lambda$, la penalización de la regularización) que estimaremos de
+la misma forma que en el problema anterior.
 
 \subsection{Estimación de hiperparámetros y selección del modelo}
 
 Ajustando modelo mediante pseudoinversa ...
 ECM aumentado sobre la muestra: 4.323467888321191
 ECM sobre la muestra: 0.013243601309686465
-$R^²$= 0.7517257860345214
+$R^2$= 0.7517257860345214
 
+
+\end{document}
 
 \subsection{Estimación de $E_{out}$ por validación cruzada y
   comparación con $E_{test}$}
