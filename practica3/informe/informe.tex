@@ -658,58 +658,74 @@ la misma forma que en el problema anterior.
 
 \subsection{Estimación de hiperparámetros y selección del modelo}
 
-Ajustando modelo mediante pseudoinversa ...
-ECM aumentado sobre la muestra: 4.323467888321191
-ECM sobre la muestra: 0.013243601309686465
-$R^2$= 0.7517257860345214
+Para seleccionar el modelo definitivo nos falta elegir un valor de
+$\lambda$ adecuado. Utilizamos la misma técnica que en el ejercicio
+anterior (GridSearch CV de \textit{sklearn}), para ello implementamos
+un método \texttt{score} en el estimador que decrezca cuando aumenta
+el ECM (lo más sencillo: score=$-$ECM). Probamos varios valores de
+$\lambda$ equiespaciados entre $10^{-4}$ y 500, y vamos estrechando el
+intervalo para obtener una estimación más precisa. La mejor puntuación
+la obtenemos para $\lambda=78.78787878787878$, con un ECM de
+$0.02396088923493373$ de media en las 5 validaciones.
 
+Ahora hemos seleccionado el modelo definitivo, lo probamos sobre la
+muestra.
 
-\end{document}
+ECM aumentado sobre la muestra: $4.323467888321191$ \\ 
+ECM sobre la muestra: $0.013243601309686465$ \\
+$R^2= 0.7517257860345214$
+
+Parece un ECM bastante bajo, y un buen ajuste: el modelo consigue
+explicar el 75.17\% de la variabilidad de la variable objetivo. Pero
+lo que nos interesa es su eficacia fuera de la muestra.
+
 
 \subsection{Estimación de $E_{out}$ por validación cruzada y
   comparación con $E_{test}$}
 
-Ecv = 0.02356922860102622
+De igual modo que en el problema anterior, estimamos $E_{out}$ por
+validación cruzada (10 subdivisiones con \texttt{cross\_val\_score} de
+\textit{sklearn}), obteniendo un error cuadrático medio
+$E_{cv} = 0.02356922860102622$. Es bastante mayor que el del conjunto
+de train, lo que podría significar que se está produciendo
+sobreajuste. Sin embargo, he comprobado que restringir más la clase de
+funciones incrementado el valor de $\lambda$ no mejora esta
+estimación, de forma que pasamos a analizar la eficacia del modelo
+sobre el conjunto de test.
 
+Primero seleccionamos 4 elementos aleatorios y calculamos la
+predicción de la variable objetivo que proporciona el modelo para cada
+uno.
 
-Selecciono un elemento aleatorio de test
-Objetivo: 0.32
-Predicción: 0.2428077121087347
-Diferencia: -0.07719228789126531
+\begin{table}[H]
+\begin{tabular}{ccccc}
+\hline
+\multicolumn{1}{|c|}{Objetivo}   & \multicolumn{1}{c|}{$0.32$}                 & \multicolumn{1}{c|}{$0.29$}                & \multicolumn{1}{c|}{$0.09$}                & \multicolumn{1}{c|}{$0.2$}                \\ \hline
+\multicolumn{1}{|c|}{Predicción} & \multicolumn{1}{c|}{$0.2428077121087347$}   & \multicolumn{1}{c|}{$0.37131158436817296$} & \multicolumn{1}{c|}{$0.13948687744365962$} & \multicolumn{1}{c|}{$0.3688994745851004$} \\ \hline
+\multicolumn{1}{|c|}{Difrencia}  & \multicolumn{1}{c|}{$-0.07719228789126531$} & \multicolumn{1}{c|}{$0.08131158436817298$} & \multicolumn{1}{c|}{$0.04948687744365962$} & \multicolumn{1}{c|}{$0.1688994745851004$} \\ \hline
+\multicolumn{1}{l}{}             & \multicolumn{1}{l}{}                        & \multicolumn{1}{l}{}                       & \multicolumn{1}{l}{}                       & \multicolumn{1}{l}{}                     
+\end{tabular}
+\end{table}
 
---- Pulsar tecla para continuar ---
+\vspace{-10mm}
 
-Selecciono un elemento aleatorio de test
-Objetivo: 0.29
-Predicción: 0.37131158436817296
-Diferencia: 0.08131158436817298
+Evaluamos ya el modelo sobre el conjunto de test.
 
---- Pulsar tecla para continuar ---
+ECM aumentado sobre el test: $4.329183968372332$ \\
+ECM sobre el test: $0.018959681360827634$ \\
+$R^2= 0.6671865221163271$
 
-Selecciono un elemento aleatorio de test
-Objetivo: 0.09
-Predicción: 0.13948687744365962
-Diferencia: 0.04948687744365962
+Aunque sigue siendo más alto que el ECM en el conjunto de
+entrenamiento, presenta una notable mejoría respecto a la estimación
+obtenida con validación cruzada.
 
---- Pulsar tecla para continuar ---
-
-Selecciono un elemento aleatorio de test
-Objetivo: 0.2
-Predicción: 0.3688994745851004
-Diferencia: 0.1688994745851004
-
-
-ECM aumentado sobre el test: 4.329183968372332
-ECM sobre el test: 0.018959681360827634
-R²= 0.6671865221163271
+\end{document}
 
 \subsection{Conclusiones}
-
 
 Comparación con KNN
 ECM sobre test: 0.02153277755511022
 KNN R²= 0.622019038705042
-
 
 Comparación con Random Forest
 ECM sobre test: 0.023047872064128255
