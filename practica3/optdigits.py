@@ -5,7 +5,7 @@
 
 NSAMPLES=3 # Vara visualizar algunos datos
 
-VISUALIZE2D=False # Para la visualización de los datos en 2D (tarda un poco)
+VISUALIZE2D=True # Para la visualización de los datos en 2D (tarda un poco)
 
 VARTHRESHOLD=0.005 # Umbral de varianza por debajo del cual elimino la característica
 POLY=2 # Grado de las características polinomiales (poner 1 o 2)

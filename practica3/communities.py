@@ -274,7 +274,7 @@ if __name__ == "__main__":
     knn.fit(x,y)
     pred=knn.predict(x_test)
     print('ECM sobre test:', metrics.mean_squared_error(y_test,pred))
-    print('KNN R²=',knn.score(x_test,y_test))
+    print('R²=',knn.score(x_test,y_test))
 
     input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -284,6 +284,6 @@ if __name__ == "__main__":
     rf.fit(x,y)
     pred=rf.predict(x_test)
     print('ECM sobre test:', metrics.mean_squared_error(y_test,pred))
-    print('KNN R²=',rf.score(x_test,y_test))
+    print('R²=',rf.score(x_test,y_test))
 
     input("\n--- Pulsar tecla para salir ---\n")
