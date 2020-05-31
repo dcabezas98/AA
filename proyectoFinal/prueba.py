@@ -9,8 +9,8 @@ CHARACTERS='datos/characters.txt'
 TRAIN_IMG_DIR='datos/DevanagariHandwrittenCharacterDataset/Train/'
 TEST_IMG_DIR='datos/DevanagariHandwrittenCharacterDataset/Test/'
 
-TRAIN_GREY='datos/DevanagariGreyscale/train.npy'
-TEST_GREY='datos/DevanagariGreyscale/test.npy'
+TRAIN_GREY='datos/DevanagariGreyscale/train.npz'
+TEST_GREY='datos/DevanagariGreyscale/test.npz'
 
 # Matrix visualization
 def visualizeMatrix(m, title='', conf=False):
@@ -50,34 +50,40 @@ def loadPng(folder, characters=characters):
 
 # Save greyscale vector
 def saveGrey(filename, data, label):
-    label=np.reshape(label,(len(label),1))
-    X=np.hstack((label,data)) # Concatenate label and data
-    #np.savetxt(filename, X, fmt='%1.8f', delimiter=',', newline='\n')
-    np.save(filename, X)
+    np.savez_compressed(filename, data, label)
+    """ No requieren concatenar
+    https://numpy.org/devdocs/reference/generated/numpy.savez.html#numpy.savez
+    https://numpy.org/devdocs/reference/generated/numpy.savez_compressed.html#numpy.savez_compressed
+    """
 
 # Load greyscale vector
 def loadGrey(filename):
     X=np.load(filename)
-    label=np.array(X[:,0],np.int8)
-    data=np.array(X[:,1:],np.float32)
+    data = X['arr_0']
+    label= X['arr_1']
+    X.close()
     return data, label
 
+"""
 # Load train data from images
 train_mat, train_label = loadPng(TRAIN_IMG_DIR, characters)
 # Matrix to vector       
 train=np.reshape(train_mat,(train_mat.shape[0],784))
 # Save train as greyscale
 saveGrey(TRAIN_GREY, train, train_label)
+"""
 
 # Load test data from images
-test_mat, test_label = loadPng(TEST_IMG_DIR, characters)
+test_mat, test_label = loadPng(TEST_IMG_DIR, characters[:5])
 # Matrix to vector       
 test=np.reshape(test_mat,(test_mat.shape[0],784))
 # Save test as greyscale
 saveGrey(TEST_GREY, test, test_label)
 
-"""
-x, y = loadGrey(TRAIN_GREY)
+
+x, y = loadGrey(TEST_GREY)
+
+
 
 # Vector to matrix
 x_mat=np.reshape(x,(x.shape[0],28,28))
@@ -86,4 +92,4 @@ for _ in range(5):
     n = np.random.randint(0,len(x_mat))
     visualizeMatrix(x_mat[n], title=className(y[n]))
     input('\n--- Pulsar tecla para continuar ---\n')
-"""
+

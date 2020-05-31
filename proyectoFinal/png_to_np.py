@@ -9,8 +9,8 @@ CHARACTERS='datos/characters.txt'
 TRAIN_IMG_DIR='datos/DevanagariHandwrittenCharacterDataset/Train/'
 TEST_IMG_DIR='datos/DevanagariHandwrittenCharacterDataset/Test/'
 
-TRAIN_GREY='datos/DevanagariGreyscale/train.npy'
-TEST_GREY='datos/DevanagariGreyscale/test.npy'
+TRAIN_GREY='datos/DevanagariGreyscale/train.npz'
+TEST_GREY='datos/DevanagariGreyscale/test.npz'
     
 # Names of classes
 with open(CHARACTERS,'r') as f:
@@ -35,10 +35,7 @@ def loadPng(folder, characters=characters):
 
 # Save greyscale vector
 def saveGrey(filename, data, label):
-    label=np.reshape(label,(len(label),1))
-    X=np.hstack((label,data)) # Concatenate label and data
-    #np.savetxt(filename, X, fmt='%1.8f', delimiter=',', newline='\n')
-    np.save(filename, X)
+    np.savez_compressed(filename, data, label)
 
 # Load train data from images
 train_mat, train_label = loadPng(TRAIN_IMG_DIR, characters)
