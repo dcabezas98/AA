@@ -77,26 +77,17 @@ def loadGrey(filename):
     return data, label
 
 
-test_mat, test_label = loadPng(TEST_IMG_DIR, characters[4:5])
-
 def entero(l):
         return list(map(int,l))
 
-samples = np.random.randint(0,len(test_mat),10)
+# Center character by crop and resize image
+def centerAndResize(img):
+    visualizeMatrix(img,'ORIGINAL')
+    thresh = threshold_otsu(img)
+    bw = closing(img > min(thresh*2,0.95), square(3))
 
-for n in samples:
-    image=test_mat[n]
-
-    visualizeMatrix(image,className(test_label[n]))
-    thresh = threshold_otsu(image)
-    bw = closing(image > thresh*2, square(3))
-    
-    #print(type(bw), bw.shape)
-    
     bw2=np.array(list(map(entero,bw)))
-    
-    visualizeMatrix(bw2,className(test_label[n]))
-    print(n)
+    visualizeMatrix(bw2, 'BINARY')
 
     label_image = label(bw)
 
@@ -108,9 +99,22 @@ for n in samples:
         mmaxr=max(maxr,mmaxr)
         mmaxc=max(maxc,mmaxc)
 
-    visualizeMatrix(image[mminr:mmaxr,mminc:mmaxc],className(test_label[n]))
+    visualizeMatrix(img[mminr:mmaxr,mminc:mmaxc],'CROP')
 
-    image=resize(image[mminr:mmaxr,mminc:mmaxc],(24,24))
+    return resize(img[mminr:mmaxr,mminc:mmaxc],(24,24))
+
+
+
+#####################################
+
+test_mat, test_label = loadPng(TEST_IMG_DIR, characters[:5])
+
+#samples = np.random.randint(0,len(test_mat),10)
+samples=[94,159]
+for n in samples:
+    image=test_mat[n]
+    print(n)
+    image=centerAndResize(image)
     visualizeMatrix(image,className(test_label[n]))    
         
 exit()
