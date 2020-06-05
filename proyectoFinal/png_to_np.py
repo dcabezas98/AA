@@ -9,8 +9,8 @@ CHARACTERS='datos/characters.txt'
 TRAIN_IMG_DIR='datos/DevanagariHandwrittenCharacterDataset/Train/'
 TEST_IMG_DIR='datos/DevanagariHandwrittenCharacterDataset/Test/'
 
-TRAIN_GREY='datos/DevanagariGreyscale/train.npz'
-TEST_GREY='datos/DevanagariGreyscale/test.npz'
+TRAIN_GRAY='datos/DevanagariGrayscale/train.npz'
+TEST_GRAY='datos/DevanagariGrayscale/test.npz'
     
 # Names of classes
 with open(CHARACTERS,'r') as f:
@@ -37,16 +37,20 @@ def loadPng(folder, characters=characters):
 def saveGrey(filename, data, label):
     np.savez_compressed(filename, data, label)
 
+print('Cargando datos de entrenamiento')
 # Load train data from images
 train_mat, train_label = loadPng(TRAIN_IMG_DIR, characters)
-# Matrix to vector       
+# Matrix to vector
 train=np.reshape(train_mat,(train_mat.shape[0],784))
 # Save train as greyscale
-saveGrey(TRAIN_GREY, train, train_label)
+saveGrey(TRAIN_GRAY, train, train_label)
+print('Datos de entrenamiento guardados en grayscale')
 
+print('Cargando datos de test')
 # Load test data from images
 test_mat, test_label = loadPng(TEST_IMG_DIR, characters)
 # Matrix to vector       
 test=np.reshape(test_mat,(test_mat.shape[0],784))
 # Save test as greyscale
-saveGrey(TEST_GREY, test, test_label)
+saveGrey(TEST_GRAY, test, test_label)
+print('Datos de test guardados en grayscale')
