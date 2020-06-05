@@ -1,3 +1,10 @@
+# Aprendizaje Automático: Proyecto Final
+# Clasificación de símbolos Devanagari
+# Patricia Córdoba Hidalgo
+# David Cabezas Berrido
+
+# png_to_np.py
+# Lee los datos en formato .png y los escribe como arrays de numpy (sin marco)
 
 import glob
 import numpy as np
@@ -27,7 +34,6 @@ def loadPng(folder, characters=characters):
         path_to_folder=folder+c+'/*.png'
         for img_path in glob.glob(path_to_folder):
             image = plt.imread(img_path)[2:-2,2:-2] # Cut frame
-            #visualizeMatrix(image,title=c)
             data.append(image)
             label.append(l)
             
