@@ -8,8 +8,8 @@
                        ]{babel}   
 \decimalpoint %para usar el punto decimal en vez de coma para los nÃºmeros con decimales
 
-\usepackage{beton}
-\usepackage[T1]{fontenc}
+%\usepackage{beton}
+%\usepackage[T1]{fontenc}
 
 \usepackage{parskip}
 \usepackage{xcolor}
@@ -43,9 +43,9 @@
 \definecolor{webblue}{rgb}{0, 0, 0.5}  % less intense blue
 
 
-\title{AA: Práctica 3}
+\title{Devanagari Handwritten Characters}
 
-\author{David Cabezas Berrido}
+\author{David Cabezas Berrido y Patricia Córdoba Hidalgo}
 
 \date{}
 
@@ -53,5 +53,21 @@
 
 \maketitle
 \tableofcontents
+
+El problema a resolver consiste en clasificar caracteres de la
+escritura Devanagari. Nuestros datos son imágenes de estos símbolos
+escritos a mano, cada uno de ellos con una etiqueta especificando el
+símbolo que representa la imagen.
+
+Inicialemente, nuestro espacio de características $\mathcal{X}$ está
+formado por imágenes de $32 \times 32$ píxeles cada una, con un margen de $2$ píxeles por cada uno de los $4$ lados. El conjunto de etiquetas, $Y$ son los $46$ caractéres que consideramos, $36$ letras y $10$ dígitos (del $0$ a $9$).
+
+En el fichero \texttt{png\_to\_np.py}, guardamos las imágenes, originalmente en formato \texttt{png}, como array. Para ello leemos cada imagen como array de escala de grises usando la función \texttt{imread} de \textit{matplotlib} y eliminamos los dos píxeles de marco por cada lado, quedándonos con matrices de $28 \times 28$ de valores flotantes entre $0$ y $1$ representando la intensidad del trazado en cada pixel. El resultado es guardado en disco, cosa que hacemos con la función \texttt{saveGrey}, que usa la función \texttt{savez\_compressed} de \textit{numpy} para almacenarlo en formato \texttt{npz}.
+
+Este fichero solo se ejecuta una vez para cambiar el formato de los datos. Tras esto, podemos usar los datos guardados en disco para las sucesivas ejecuciones del código. Proporcionamos los datos ya transformados, aunque en el fichero \texttt{main.py} se puede alterar la variable \texttt{PNG\_TO\_NP} para computarlos desde las imágenes.
+
+Preprocesamos los datos usando las funciones implementadas en el fichero \texttt{preprocessing.py}. En la función \texttt{centerAndResize} centramos el simbolo y reescalamos la imagen, para que todas ellas sean de $24 \times 24$. Para ello, calculamos la caja englobate de la región donde se encuentra el caracter (la región con más intensidad de gris, es decir, por encima de un umbral que calculamos con ayuda del método Otsu implementado en \textit{skimage}) y recortamos el resto de la imagen. Reescalamos con la función \texttt{resize} (también de \textit{skimage}). Con la variable \texttt{BLOCK\_REDUCE} decidimos si reducir las características de la imagen, agrupando un bloque de 4 píxeles en uno usando la media de sus valores. Esta reducción se lleva a cabo con la función \texttt{block\_reduce} de \textit{skimage}. Este preprocesamiento se realiza con los datos guardados como matrices de $28 \times 28$, y tras realizarse vuelve a guardar los datos como arrays (usamos \texttt{reshape} de \textit{numpy} para esto).
+
+Seleccionamos un conjunto de validación para estimar los parámetros e hiperparámetros usados en en proyecto. Decidimos no usar validación cruzada debido a la abundancia de datos y la lentitud del ajuste.
 
 \end{document}
