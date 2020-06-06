@@ -95,7 +95,9 @@ if __name__ == "__main__":
 
     # Split validation set from train data
     train, val, train_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.7, test_size=0.3)
-    
+
+    print(train.shape)
+    print(val.shape)
     
     print('\nRANDOM FOREST:\n')
     # Validation score for hyperparameters in grid

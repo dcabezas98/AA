@@ -23,7 +23,7 @@ BLOCK_REDUCE=True # Wether or not to perform block reduce
 # Center character by crop and resize image
 def centerAndResize(img):
 
-    # Ignote low intensity pixel to obtain components
+    # Ignote low intensity pixels to obtain components
     thresh = threshold_otsu(img)
     bw = closing(img > min(thresh*2,0.95), square(3))
     label_image = label(bw) # Separate into connected regions
