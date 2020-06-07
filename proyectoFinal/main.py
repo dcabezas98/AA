@@ -15,7 +15,10 @@ from model import modelPerformance, modelAccuracy
 
 from sklearn.model_selection import train_test_split
 
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.neural_network import MLPClassifier
+
 
 # Random Forest Parameters:
 RF_N_ESTIMATORS=[100,200] # Number of estimators for baggin
@@ -95,13 +98,14 @@ if __name__ == "__main__":
 
     # Split validation set from train data
     train, val, train_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.7, test_size=0.3)
-
-    print(train.shape)
-    print(val.shape)
     
-    print('\nRANDOM FOREST:\n')
+    print('\nRandom Forest:\n')
+    #rf=RandomForestClassifier(criterion='entropy', n_jobs=4)
+    #rf.fit(train,train_label)
+    #print('RF:',rf.score(val,val_label))
+    
     # Validation score for hyperparameters in grid
-"""
+    """
     for n, a, s in product(RF_N_ESTIMATORS,RF_ALPHA,RF_SAMPLES):
         rf=RandomForestClassifier(n_estimators=n, ccp_alpha=a, max_samples=s, criterion='entropy', n_jobs=4)
         acc_val, acc_train = modelAccuracy(rf, train, train_label, val, val_label)
@@ -111,4 +115,29 @@ if __name__ == "__main__":
         print('Accuracy sobre train:',acc_train)
         print('Accuracy sobre validación:',acc_val)
         print()
-"""
+    """
+
+    print('\nMLP:\n')
+    mlp=MLPClassifier(hidden_layer_sizes=(100,100),activation='tanh',max_iter=500,early_stopping=True)
+    mlp.fit(train,train_label)
+    print('MLP:',mlp.score(val,val_label))
+    
+    print('\nRegresión Logística:\n')
+
+    print(train.shape)
+
+    lr=LogisticRegression(max_iter=1000)
+    lr.fit(train,train_label)
+    print('LR:',lr.score(val,val_label))
+
+    sgd=SGDClassifier(loss='log')
+    sgd.fit(train,train_label)
+    print('SGD:',sgd.score(val,val_label))
+
+    print('\nAdaBoost:\n')
+    exit()
+    ab=AdaBoostClassifier(n_estimators=200, learning_rate=0.1)
+    ab.fit(train,train_label)
+    print('AB:',ab.score(val,val_label))
+
+    
