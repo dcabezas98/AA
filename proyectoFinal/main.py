@@ -12,18 +12,21 @@ from itertools import product
 
 from preprocessing import preprocessing
 from model import modelPerformance, modelAccuracy
+from random_forest import grafNestimators, grafAlpha
 
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import VarianceThreshold
 
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neural_network import MLPClassifier
 
+# To show that there are no features with null variance
+VARTHRESH=False
 
 # Random Forest Parameters:
-RF_N_ESTIMATORS=[100,200] # Number of estimators for baggin
-RF_ALPHA=[0,0.05,0.1] # Cost-Complexity Parameter
-#RF_SAMPLES=[0.5,0.75,None] # Subsample size for bootstrap
+RF_N_ESTIMATORS=100 # Number of estimators for baggin
+RF_ALPHA=0 # Cost-Complexity Parameter
 
 # Save greyscale data to disc
 PNG_TO_NP=False
@@ -97,28 +100,24 @@ if __name__ == "__main__":
         np.savez_compressed(TEST_PRE, test, test_label)
 
     # Split validation set from train data
-    train, val, train_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.7, test_size=0.3)
-    
-    print('\nRandom Forest:\n')
-    #rf=RandomForestClassifier(criterion='entropy', n_jobs=4)
-    #rf.fit(train,train_label)
-    #print('RF:',rf.score(val,val_label))
-    
-    # Validation score for hyperparameters in grid
-    """
-    for n, a, s in product(RF_N_ESTIMATORS,RF_ALPHA,RF_SAMPLES):
-        rf=RandomForestClassifier(n_estimators=n, ccp_alpha=a, max_samples=s, criterion='entropy', n_jobs=4)
-        acc_val, acc_train = modelAccuracy(rf, train, train_label, val, val_label)
-        print('n_estimators =', n)
-        print('alpha =',a)
-        print('bootstrap samples =',s)
-        print('Accuracy sobre train:',acc_train)
-        print('Accuracy sobre validación:',acc_val)
-        print()
-    """
+    # train, val, train_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.7, test_size=0.3)
 
+    
+    if VARTHRESH: # To show that there are no useless (variance 0) features
+        print('Características tras preprocesado:', train.shape[1])
+        varthresh = VarianceThreshold()
+        train=varthresh.fit_transform(train)
+        print('Características tras eliminar las de varianza nula:', train.shape[1])
+
+    print('\nRandom Forest:\n')
+
+    # For hyperparameters selection
+    grafNestimators(train, train_label)
+    #grafAlpha(train, train_label, val, val_label)
+
+    exit()
     print('\nMLP:\n')
-    mlp=MLPClassifier(hidden_layer_sizes=(100,100),activation='tanh',max_iter=500,early_stopping=True)
+    mlp=MLPClassifier(hidden_layer_sizes=(100,100),activation='tanh',max_iter=400,early_stopping=False)
     mlp.fit(train,train_label)
     print('MLP:',mlp.score(val,val_label))
     
@@ -138,6 +137,4 @@ if __name__ == "__main__":
     exit()
     ab=AdaBoostClassifier(n_estimators=200, learning_rate=0.1)
     ab.fit(train,train_label)
-    print('AB:',ab.score(val,val_label))
-
-    
+    print('AB:',ab.score(val,val_label))    
