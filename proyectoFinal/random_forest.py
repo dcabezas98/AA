@@ -13,15 +13,15 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 # Random Forest Parameters:
-RF_N_ESTIMATORS= 277 # Number of estimators for baggin
+RF_N_ESTIMATORS= 287 # Number of estimators for baggin
 FIRST_N = 285 #275 #200 #50
 LAST_N = 295 #300
 INC_N = 2 #5 #25 #50
 
 RF_ALPHA = 0 # Cost-Complexity Parameter
 FIRST_A = 0
-LAST_A = 0.00001 # 0.1
-NUM_A = 5
+LAST_A = 0.00001 # 0.00005 #0.0001
+NUM_A = 6 #11 #6
 
 # Compares accuracy of different numbers of estimators
 def grafNestimators(data, label):
@@ -40,7 +40,7 @@ def grafNestimators(data, label):
     plt.show()
     
 # Compares accuracy of different values of alpha
-def grafAlpha(train, train_label, val, val_label):
+def grafAlpha(data, label):
     output=[]
     for a in np.linspace(FIRST_A, LAST_A, NUM_A):
         print(a)

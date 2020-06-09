@@ -13,20 +13,26 @@ from itertools import product
 from preprocessing import preprocessing
 from model import modelPerformance, modelAccuracy
 from random_forest import grafNestimators, grafAlpha
+from mlp import grafNneur
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import VarianceThreshold
 
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import SGDClassifier
 from sklearn.neural_network import MLPClassifier
+
+# For 2D visualization of DATA
+VISUALIZE2D=False
 
 # To show that there are no features with null variance
 VARTHRESH=False
 
-# Random Forest Parameters:
-RF_N_ESTIMATORS=100 # Number of estimators for baggin
-RF_ALPHA=0 # Cost-Complexity Parameter
+# Generate graphs for hyperparameter selections (take several hours)
+PARAMSELECT=False
 
 # Save greyscale data to disc
 PNG_TO_NP=False
@@ -45,6 +51,15 @@ TEST_GRAY='datos/DevanagariGrayscale/test.npz'
 
 TRAIN_PRE='datos/DevanagariPreprocessed/train.npz'
 TEST_PRE='datos/DevanagariPreprocessed/test.npz'
+
+# Hyperparameters for each model:
+
+# Random Forest:
+RF_N_ESTIMATORS=287 # Number of estimators for baggin
+RF_ALPHA=0 # Cost-Complexity Parameter
+
+# Multi-Layer Perceptron:
+MLP_NNEURS=59
 
 # Names of classes
 with open(CHARACTERS,'r') as f:
@@ -73,6 +88,19 @@ def loadGrey(filename):
     X.close()
     return data, label
 
+# 2D data visualization
+def plot2D(x,y, alg_name,classes):
+    plt.scatter(x[:,0],x[:,1],c=y, cmap='tab20', alpha=0.5)
+    plt.title('Representación de los '+classes+' en dos dimensiones\n usando el algoritmo '+alg_name)
+    plt.show()
+
+# 2D projection and visualization of data
+def visualize2D(x,y,classes=''):
+    x2=PCA(n_components=2).fit_transform(x) # PCA projection
+    plot2D(x2,y,'PCA',classes)
+    x2=TSNE(n_components=2,init=x2).fit_transform(x) # TSNE projection
+    plot2D(x2,y,'TSNE',classes)
+    
 
 # Main
 if __name__ == "__main__":
@@ -99,9 +127,20 @@ if __name__ == "__main__":
         np.savez_compressed(TRAIN_PRE, train, train_label)
         np.savez_compressed(TEST_PRE, test, test_label)
 
-    # Split validation set from train data
-    # train, val, train_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.7, test_size=0.3)
+    if VISUALIZE2D: # Generate 2D visualization
+        x, x1, y, y1 = train_test_split(train, train_label,stratify=train_label, train_size=0.4)
 
+        x2=[x[i] for i in range(len(x)) if 1<=y[i]<=18] # Classes to plot
+        y2=[y[i] for i in range(len(y)) if 1<=y[i]<=18]
+        visualize2D(x2,y2,'caracteres del 1 al 18')
+
+        x2=[x[i] for i in range(len(x)) if 19<=y[i]<=36] # Classes to plot
+        y2=[y[i] for i in range(len(y)) if 19<=y[i]<=36]
+        visualize2D(x2,y2,'caracteres del 19 al 36')
+
+        x2=[x[i] for i in range(len(x)) if 37<=y[i]<=46] # Classes to plot
+        y2=[y[i] for i in range(len(y)) if 37<=y[i]<=46]
+        visualize2D(x2,y2,'dígitos del 0 al 9')
     
     if VARTHRESH: # To show that there are no useless (variance 0) features
         print('Características tras preprocesado:', train.shape[1])
@@ -109,11 +148,25 @@ if __name__ == "__main__":
         train=varthresh.fit_transform(train)
         print('Características tras eliminar las de varianza nula:', train.shape[1])
 
+    # For hyperparameters selection
+    if PARAMSELECT:
+        # Random Forest
+        grafNestimators(train, train_label)
+        grafAlpha(train, train_label)
+        # MLP
+        grafNneur(train, train_label)
+
+
+    # Split validation set from train data
+    # train, val, train_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.7, test_size=0.3)
+
     print('\nRandom Forest:\n')
 
-    # For hyperparameters selection
-    grafNestimators(train, train_label)
-    #grafAlpha(train, train_label, val, val_label)
+    '''
+    rf=RandomForestClassifier(n_estimators=RF_N_ESTIMATORS, ccp_alpha=a, n_jobs=4)
+    rf.fit(train, train_label)
+    print('Random Forest Accuracy: ', rf.score())
+    '''
 
     exit()
     print('\nMLP:\n')
