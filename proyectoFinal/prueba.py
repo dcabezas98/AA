@@ -2,99 +2,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from skimage.filters import threshold_otsu
-from skimage.morphology import closing, square
-from skimage.measure import label, regionprops, block_reduce
-from skimage.transform import resize
+a=[5e-5,0.000545,0.00104,0.001535,0.00203,0.002525,0.00302,0.003515,0.00401,0.004505,0.005]
+a2=[1e-5,5.9e-5,0.000108,0.000157,0.000184,0.000206,0.000255,0.000304,0.000338,0.000353]
+a3=[2e-5,3e-5,4e-05,5e-5,6e-5,7e-5]
+a4=[2.5e-05,3e-5,3.5e-5,4e-5,4.5e-5]
 
-from joblib import Parallel, delayed
+out=[0.7224552819591642,0.6868542481367719,0.6781841792569362,0.6692327663903294,0.6646163815860494,0.6610486179322512,0.6576342932275755,0.6546163990802718,0.6517775140967742,0.6491176623156947,0.648785200957]
+out2=[0.682186760187502,0.7207545099528697,0.7121995232283794,0.7063043794544583,0.7033120609182612,0.7019821134420293,0.6985678044360388,0.6958823824402757,0.69512790706376,0.6941688194396325]
+out3=[0.7226342881794671,0.725063969272265,0.7251279056018199,0.7224552819591642,0.7203580887165923,0.7182353350710149]
+out4=[0.7240409296198967,0.725063969272265,0.7237596204645835,0.7251279056018199,0.7235038535606707]
 
-TEST_GRAY='datos/DevanagariHandwrittenCharacterDataset/Test/'
-# Paths
-CHARACTERS='datos/characters.txt'
-
-WIDTH=24
-
-# Names of classes
-with open(CHARACTERS,'r') as f:
-    characters = f.read().split('\n')[:-1]
-
-def entero(l):
-        return list(map(int,l))
-
-# Center character by crop and resize image
-def centerAndResize(img):
-    
-    # Ignote low intensity pixel to obtain components
-    thresh = threshold_otsu(img)
-    bw = closing(img > min(thresh*2,0.95), square(3))
-    bw2=np.array(list(map(entero,bw)))
-    visualizeMatrix(bw2,'Closing del thresholding')
-    label_image = label(bw) # Separate into connected regions
-
-    # Compute box that contains all components
-    mminr=28; mminc=28; mmaxr=0; mmaxc=0
-    for region in regionprops(label_image):
-        minr, minc, maxr, maxc = region.bbox
-        mminr=min(minr,mminr)
-        mminc=min(minc,mminc)
-        mmaxr=max(maxr,mmaxr)
-        mmaxc=max(maxc,mmaxc)
-
-    visualizeMatrix(img[mminr:mmaxr,mminc:mmaxc],'Recortado a '+str(mmaxr-mminr)+' x '+str(mmaxc-mminc))
-    # Resize to unified size
-    return resize(img[mminr:mmaxr,mminc:mmaxc],(WIDTH,WIDTH), anti_aliasing=True)
-
-# Preprocessing for single image
-def preprocess(img):
-    img = np.reshape(img,(28,28))
-    img = centerAndResize(img)
-    if BLOCK_REDUCE:
-        img = block_reduce(img,(2,2),np.mean)
-    img = np.reshape(img,img.shape[0]*img.shape[1])
-    return img
-
-
-# Matrix visualization
-def visualizeMatrix(m, title='', conf=False):
-    plt.matshow(m, cmap='viridis')
-    plt.colorbar()
-    plt.title(title,pad=20.0)
-    if conf:
-        plt.ylabel('Verdaderos')
-        plt.xlabel('Predicciones')
-    plt.show()
-
-
-# Class name from integer label
-def className(n,c=characters):
-    assert 1<=n<=46
-    return c[n-1]
- 
-# Load data from .png format
-def loadPng(folder, characters=characters):
-    data=[]
-    for c in characters:
-        print('Cargando: '+c)
-        path_to_folder=folder+c+'/75428.png'
-        image = plt.imread(path_to_folder)[2:-2,2:-2] # Cut frame
-        data.append(image)
-            
-    return np.array(image,np.float32)
-
-test = loadPng(TEST_GRAY, characters[4:5])
-
-img = test
-l=characters[4]
-
-print(img.shape)
-
-visualizeMatrix(img,'Imagen de '+l)
-
-img=centerAndResize(img)
-
-visualizeMatrix(img, 'Centrado y reescalado a 24 x 24')
-
-img = block_reduce(img,(2,2),np.mean)
-
-visualizeMatrix(img, 'Downsampling a 12 x 12')
+plt.plot(a4,out4, c='r')
+plt.title('Accuracy media frente a alpha (LR)')
+plt.xlabel('Alpha')
+plt.ylabel('Accuracy')
+plt.show()

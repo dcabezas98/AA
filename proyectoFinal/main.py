@@ -10,13 +10,17 @@ import matplotlib.pyplot as plt
 
 from itertools import product
 
-from preprocessing import preprocessing
+from preprocessing import preprocessing, polynomial
 from model import modelPerformance, modelAccuracy
 from random_forest import grafNestimators, grafAlpha
 from mlp import grafNneur
+from logistic_regression import grafLRAlpha
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import VarianceThreshold
+
+from sklearn.preprocessing import StandardScaler
 
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -32,7 +36,7 @@ VISUALIZE2D=False
 VARTHRESH=False
 
 # Generate graphs for hyperparameter selections (take several hours)
-PARAMSELECT=False
+PARAMSELECT=True
 
 # Save greyscale data to disc
 PNG_TO_NP=False
@@ -151,10 +155,14 @@ if __name__ == "__main__":
     # For hyperparameters selection
     if PARAMSELECT:
         # Random Forest
-        grafNestimators(train, train_label)
-        grafAlpha(train, train_label)
+        #grafNestimators(train, train_label)
+        #grafAlpha(train, train_label)
         # MLP
-        grafNneur(train, train_label)
+        #grafNneur(train, train_label)
+        # LogisticRegression
+        train2=polynomial(train,4)
+        train2=StandardScaler().fit_transform(train2)
+        grafLRAlpha(train2, train_label)
 
 
     # Split validation set from train data

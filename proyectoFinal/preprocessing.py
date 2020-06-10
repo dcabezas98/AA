@@ -53,3 +53,11 @@ def preprocess(img):
 def preprocessing(data):
     out = Parallel(n_jobs=4)(map(delayed(preprocess),data))            
     return np.array(out,np.float32)
+
+# Add some polynomial features to data
+def polynomial(data,deg):
+    out=data.copy()
+    for n in range(2,deg+1):
+        out=np.concatenate((out,data**n),axis=1)
+
+    return out

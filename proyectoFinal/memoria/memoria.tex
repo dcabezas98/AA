@@ -80,14 +80,13 @@ El conjunto de datos de los que disponemos \\
 consta de 92000 instancias (imágenes etiquetadas), 2000 de cada una de
 las 46 clases. Los datos vienen divididos en train: 78200 instancias
 (85\%), 1700 por clase; y test: 13800 instancias (15\%), 300 por
-clase.
+clase. No existen datos perdidos y las clases están perfectamente
+balanceadas.
 
 Existen algunos artículos y proyectos relativos a este dataset, por lo
 que mantener esta división entre train y test nos permitirá
 comparar los resultados que logren nuestros modelos y procesamiento
-con los resultados de otros diseñados por terceros.
-También sabemos que no existen datos perdidos y las clases están
-perfectamente balanceadas.
+con los resultados de otros diseñados por terceros. 
 
 En la descripción del dataset se informa de que estos datos proceden
 de documentos escritos, pero desconocemos su procedencia y sus
@@ -141,8 +140,7 @@ imágenes y almacena estos datos en disco.
 
 % Comentar justificaciones: 3 modelos ajustados con parámetros por defecto. WIDTH y BLOCK_REDUCE
 
-Preprocesamos los datos usando las funciones implementadas en el
-fichero \texttt{preprocessing.py}. El preprocesamiento se realiza
+El preprocesamiento se realiza
 imagen a imagen, siendo el resultado sólo dependiente de la propia
 imagen y por tanto paralelizable. Para cada imagen realizamos dos operaciones: centrado y reescalado, y downsampling. Tras este proceso, nos quedan $144$ características ($12 \times 12$) y comprobamos con la función \texttt{VarianceThreshold} de \textit{sklearn} que no hay características con varianza $0$ en el conjunto de train (todas aportan algo de información). Consideramos que no es necesario normalizar las variables, ya que todas tienen la misma naturaleza (intensidad de gris en un píxel) y la misma escala (entre $0$ y $1$).
 
@@ -190,21 +188,115 @@ a cabo con la función \texttt{block\_reduce} de \textit{skimage}.
   \label{fig:downsampling}
 \end{figure}
 
+\section{Visualización de los datos mediante proyección 2D}
+
+Podemos proyectar los datos en dos dimensiones para intuir de un
+simple vistazo hasta que punto la información de la que disponemos nos
+permitirá discernir unas clases de otras, y así conocer (entre otras
+cosas) si se ha perdido información durante el
+preprocesamiento. Existen algoritmos para esto: PCA (Principal
+Component Analysis), que proyecta las dos direcciones que más nos
+ayuden a discernir los datos. También TSNE (T-distributd Stochastic
+Neighbor Embedding), un algoritmo iterativo (lo lanzamos con la salida
+de PCA como proyección inicial) que proyecta los datos en dos
+dimensiones de forma que para cada dato sus vecinos más cercanos
+queden proyectados cerca.
+
+El gran número de datos hace que estas representaciones tarden mucho
+tiempo en generarse y estén muy cargadas, por lo que sólo
+representamos el 40\% de los datos. Además, debido al elevado número
+de clases, no podemos representar cada un con un color diferente de
+forma que sean fácilmente distinguibles, por eso las representamos
+separadas en 3 gráficas diferentes: caracteres del 1 al 18, caracteres
+del 19 al 36 y dígitos (del 0 al 9). Nos interesa ver si las
+instancias de la misma clase están cerca entre sí, no la localización
+en el espacio. Por tanto omitimos la leyenda (que además sería
+extremadamente larga y taparía el gráfico).
+
+Generamos estas representaciones antes y después del preprocesado,
+para advertir si la reducción de dimensionalidad conlleva una pérdida
+considerable de información.
+
+\begin{figure}[H]
+  \centering
+  \subfigure[PCA. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/pca1}}
+  \subfigure[PCA. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/pca-nopre1}}
+  \subfigure[TSNE. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne1}}
+  \subfigure[TSNE. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne-nopre1}}
+  \caption{Proyecciones en 2D de las clases correspondientes a los caracteres del 1 al 18}
+  \label{fig:char1-18}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \subfigure[PCA. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/pca2}}
+  \subfigure[PCA. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/pca-nopre2}}
+  \subfigure[TSNE. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne2}}
+  \subfigure[TSNE. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne-nopre2}}
+  \caption{Proyecciones en 2D de las clases correspondientes a los caracteres del 1 al 18}
+  \label{fig:char19-36}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \subfigure[PCA. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/pca3}}
+  \subfigure[PCA. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/pca-nopre3}}
+  \subfigure[TSNE. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne3}}
+  \subfigure[TSNE. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne-nopre3}}
+  \caption{Proyecciones en 2D de las clases correspondientes a los caracteres del 1 al 18}
+  \label{fig:digit0-9}
+\end{figure}
+
+Aunque existan algunas clases entremezcladas y algunas instancias
+dispersas, en las proyecciones TSNE se percibe que los datos
+correspondientes a la misma clase en general están cerca. En las
+proyecciones con PCA, se distinguen ligeramente algunas clases del
+resto, pero la mayoría están totalmente entremezcladas.
+
+Comparando las proyecciones antes y después del preprocesamiento, no
+parece que exista una pérdida de información significativa. Las
+clases están mezcladas prácticamente en la misma medida.
+
+No obstante, estas representaciones no deben ser nuestra única
+justificación para concluir que el preprocesamiento es adecuado. Es
+por ello que basamos el grueso de nuestros argumentos de la sección
+anterior en resultados empíricos obtenidos por validación.
+
 \section{Random Forest}
 
-El modelo de random forest construye \texttt{n\_estimators} árboles de decisión usando la totalidad de la muestra para la construcción de cada uno, pero sólo un subconjunto de las características para disminuir la correlación entre los árboles. Usamos la raíz cuadrada del número de características, que es un valor adecuado según lo estudiado en teoría y además, el valor que recomienda la implementación de \textit{sklearn}. Tras esto, hace una media de dichos árboles para controlar el overfitting y reducir la variabilidad.
+El modelo de random forest construye \texttt{n\_estimators} árboles de
+decisión usando la totalidad de la muestra para la construcción de
+cada uno, pero sólo un subconjunto de las características para
+disminuir la correlación entre los árboles. Usamos la raíz cuadrada
+del número de características, que es un valor adecuado según lo
+estudiado en teoría y además, el valor que recomienda la
+implementación de \textit{sklearn}. Tras esto, hace una media de
+dichos árboles para controlar el overfitting y reducir la
+variabilidad.
 
-Elegimos este modelo por su capacidad para conseguir un bajo sesgo combinada con una baja variabilidad. Además, los árboles de decisión son muy adecuados para clasificación cuando el número de clases es elevado (basta asignar una clase a cada nodo), y en nuestro caso tenemos 46 clases.
+Elegimos este modelo por su capacidad para conseguir un bajo sesgo
+combinada con una baja variabilidad. Además, los árboles de decisión
+son muy adecuados para clasificación cuando el número de clases es
+elevado (basta asignar una clase a cada nodo), y en nuestro caso
+tenemos 46 clases.
 
 \subsection{Función de pérdida}
 
-La función de pérdida que intenta minimizar cada uno de los árboles de decisión que promedia random forest es:
-\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T)\]
-donde $|T|$ es el número de nodos del árbol $T$, $N_m$ es el número de instancias que caen en el nodo terminal $m$ y $Q_m(T)$ la medida de impureza del nodo terminal $m$. Como medida de impureza, tomamos Gini Index, aunque la entropía cruzada proporciona resultados parecidos.
+La función de pérdida que intenta minimizar cada uno de los árboles de
+decisión que promedia random forest es:
+\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T)\] donde $|T|$ es el número
+de nodos del árbol $T$, $N_m$ es el número de instancias que caen en
+el nodo terminal $m$ y $Q_m(T)$ la medida de impureza del nodo
+terminal $m$. Como medida de impureza, tomamos Gini Index, aunque la
+entropía cruzada proporciona resultados parecidos.
 
 \subsection{Estimación de hiperparámetros}
 
-De los múltiples hiperparámetros que podríamos ajustar (profundidad máxima de cada árbol, máximo número de nodos terminales, mínimo número de muestras en cada nodo, \ldots), sólo buscaremos un valor adecuado para el número de estimadores a tener en cuenta, manteniendo el resto por defecto.
+De los múltiples hiperparámetros que podríamos ajustar (profundidad
+máxima de cada árbol, máximo número de nodos terminales, mínimo número
+de muestras en cada nodo, \ldots), sólo buscaremos un valor adecuado
+para el número de estimadores a tener en cuenta, manteniendo el resto
+por defecto.
 
 Para elegir un valor de \texttt{n\_estimators}, representamos la
 accuracy media obtenida usando validación cruzada con tres
@@ -241,10 +333,17 @@ intentamos regularizar para reducir la complejidad (el número de
 nodos) de cada árbol penalizando con el parámetro $\alpha$. Quedando
 la función a minimizar como:
 \[R_\alpha(T)=R(T)+\alpha|T|\] donde $|T|$ es el número de nodos
-terminales del árbol $T$ y $R$ es la función de pérdida asociada a la impureza de los nodos terminales ($Q$) promediados por el número de muestras que instancias que caen cada nodo ($N$).
+terminales del árbol $T$ y $R$ es la función de pérdida asociada a la
+impureza de los nodos terminales ($Q$) promediados por el número de
+muestras que instancias que caen cada nodo ($N$).
 
 Originalmente el valor por defecto de $\alpha$ es 0, hemos probado a
-incrementarlo y medir la accuracy media de tres subdivisiones de validación cruzada para cada uno de los diferentes valores de $\alpha$ probados. Claramente, la accuracy decrece al aumentar alpha. Observando la escala del eje en la última gráfica, concluimos que no mejoramos nada aumentando éste, por lo que mantenemos el valor inicial de $\alpha$, $0$.
+incrementarlo y medir la accuracy media de tres subdivisiones de
+validación cruzada para cada uno de los diferentes valores de $\alpha$
+probados. Claramente, la accuracy decrece al aumentar
+alpha. Observando la escala del eje en la última gráfica, concluimos
+que no mejoramos nada aumentando éste, por lo que mantenemos el valor
+inicial de $\alpha$, $0$.
 
 \begin{figure}[H]
   \centering
@@ -257,15 +356,35 @@ incrementarlo y medir la accuracy media de tres subdivisiones de validación cru
 
 \section{Multilayer Perceptron (MLP)}
 
-El modelo de perceptrón multicapa usado consta de tres capas: la capa de entrada, dos ocultas y una de salida. Como función de activación en cada neurona hemos considerado $\tanh$ y como algoritmo para ajustar los pesos usamos Adam, como nos recomendaron en teoría y como recomienda la documentación de \textit{sklearn} para datasets grandes como es el nuestro.
+El modelo de perceptrón multicapa usado consta de tres capas: la capa
+de entrada, dos ocultas y una de salida. Como función de activación en
+cada neurona hemos considerado $\tanh$ y como algoritmo para ajustar
+los pesos usamos Adam, como nos recomendaron en teoría y como
+recomienda la documentación de \textit{sklearn} para datasets grandes
+como es el nuestro.
 
-Al igual que random forest, el perceptrón multicapa tiene suficiente complejidad para obtener un bajo sesgo y facilidad para clasificación no binaria. Para afrontar el problema del sobreajuste, podemos utilizar early stopping como regularización, ya que disponemos de un número elevado de muestras de entrenamiento y podemos permitirnos sacrificar algunas con el fin de combatir el sobreajuste.
+Al igual que random forest, el perceptrón multicapa tiene suficiente
+complejidad para obtener un bajo sesgo y facilidad para clasificación
+no binaria. Para afrontar el problema del sobreajuste, podemos
+utilizar early stopping como regularización, ya que disponemos de un
+número elevado de muestras de entrenamiento y podemos permitirnos
+sacrificar algunas con el fin de combatir el sobreajuste.
 
 Por tanto, consideramos este modelo adecuado para el problema.
 
 \subsection{Estimación de hiperparámetros}
 
-Estimamos el número de neuronas, \texttt{N\_NEUR}, que tiene cada una de las capas ocultas. Como nos recomendaban valores entre $50$ y $100$ hicimos las mediciones de la accuracy media usando validación cruzada con dos subdivisiones del modelo con \texttt{N\_NEUR} en dicho rango. Observamos que el máximo se alcanza en torno a $60$ neuronas por capa, luego repetimos las mediciones ahora en el intervalo $[55,70]$. A pesar de que la diferencia entre la accuracy es leve, seguimos buscando un valor para \texttt{N\_NEUR} en torno a $60$, que es donde conseguimos la accuracy más alta. Al medir la accuracy en el intervalo $[58,62]$, obtenemos el máximo en $59$. Por tanto, cada capa oculta del MLP usado para el ajuste tendrá 59 neuronas.
+Estimamos el número de neuronas, \texttt{N\_NEUR}, que tiene cada una
+de las capas ocultas. Como nos recomendaban valores entre $50$ y $100$
+hicimos las mediciones de la accuracy media usando validación cruzada
+con dos subdivisiones del modelo con \texttt{N\_NEUR} en dicho
+rango. Observamos que el máximo se alcanza en torno a $60$ neuronas
+por capa, luego repetimos las mediciones ahora en el intervalo
+$[55,70]$. A pesar de que la diferencia entre la accuracy es leve,
+seguimos buscando un valor para \texttt{N\_NEUR} en torno a $60$, que
+es donde conseguimos la accuracy más alta. Al medir la accuracy en el
+intervalo $[58,62]$, obtenemos el máximo en $59$. Por tanto, cada capa
+oculta del MLP usado para el ajuste tendrá 59 neuronas.
 
 \begin{figure}[H]
   \centering
