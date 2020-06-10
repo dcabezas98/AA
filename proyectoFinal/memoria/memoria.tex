@@ -101,21 +101,21 @@ corresponden a símbolos trazados por distintas personas o no, con lo
 que tenemos otra razón más para respetar la partición de conjuntos de
 train y test existente.
 
-Extraemos un conjunto de validación del 30\% de los datos de
-entrenamiento para consultar la eficacia práctica de ciertas
-decisiones que tomamos durante el preprocesamiento, así como para
-estimar los hiperparámetros usados en cada modelo. Esto nos deja con
-54740 (70\%) datos para entrenar cada alternativa y 23460 datos para
-validar. Debido a la abundancia de datos, podemos esperar que los
-scores obtenidos al validar sean representativos de la bondad real de
-un modelo o procesamiento, así que decidimos no usar validación
-cruzada, ya que es computacionalmente muy costosa y el ajuste de los
-modelos es lento debido a la cantidad de datos.
+% Extraemos un conjunto de validación del 30\% de los datos de
+% entrenamiento para consultar la eficacia práctica de ciertas
+% decisiones que tomamos durante el preprocesamiento, así como para
+% estimar los hiperparámetros usados en cada modelo. Esto nos deja con
+% 54740 (70\%) datos para entrenar cada alternativa y 23460 datos para
+% validar. Debido a la abundancia de datos, podemos esperar que los
+% scores obtenidos al validar sean representativos de la bondad real de
+% un modelo o procesamiento, así que decidimos no usar validación
+% cruzada, ya que es computacionalmente muy costosa y el ajuste de los
+% modelos es lento debido a la cantidad de datos.
 
-Para ello usamos la función \texttt{train\_test\_split} de
-\textit{sklearn} e indicamos mediante la opción \texttt{stratify} que
-queremos preservar la proporción de elementos de cada clase en cada
-uno de los conjuntos, de forma que sigan perfectamente balanceadas.
+% Para ello usamos la función \texttt{train\_test\_split} de
+% \textit{sklearn} e indicamos mediante la opción \texttt{stratify} que
+% queremos preservar la proporción de elementos de cada clase en cada
+% uno de los conjuntos, de forma que sigan perfectamente balanceadas.
 
 \subsection{Formato de los datos}
 
@@ -139,19 +139,12 @@ imágenes y almacena estos datos en disco.
 
 \section{Preprocesamiento}
 
-% Comentar justificaciones: RF con parámetros por defecto. WIDTH y
-% BLOCK_REDUCE
-
-% ¿Vale la pena matriz de Pearson?
-
-% Quizá dos subsecciones y desarrollar y justificar más cada función
+% Comentar justificaciones: 3 modelos ajustados con parámetros por defecto. WIDTH y BLOCK_REDUCE
 
 Preprocesamos los datos usando las funciones implementadas en el
 fichero \texttt{preprocessing.py}. El preprocesamiento se realiza
 imagen a imagen, siendo el resultado sólo dependiente de la propia
-imagen y por tanto paralelizable. Esta independencia hace que sea
-indiferente extraer los datos para validación antes o después del
-preprocesamiento. Para cada imagen realizamos dos operaciones:
+imagen y por tanto paralelizable. Para cada imagen realizamos dos operaciones: centrado y reescalado, y downsampling. Tras este proceso, nos quedan $144$ características ($12 \times 12$) y comprobamos con la función \texttt{VarianceThreshold} de \textit{sklearn} que no hay características con varianza $0$ en el conjunto de train (todas aportan algo de información). Consideramos que no es necesario normalizar las variables, ya que todas tienen la misma naturaleza (intensidad de gris en un píxel) y la misma escala (entre $0$ y $1$).
 
 \subsection{Centrado y reescalado}
 
@@ -188,13 +181,99 @@ píxeles en uno usando la media de sus valores. Esta reducción se lleva
 a cabo con la función \texttt{block\_reduce} de \textit{skimage}.
 
 % Comentar que esta decisión es arriesgada y que nos hemos basado en
-% validación con RF
+% validación con los 3 modelos ajustados
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=87mm]{imgs/downsampling.png}
   \caption{Resultado del preprocesamiento (tras combinar centrado y reescalado con downsampling)}
   \label{fig:downsampling}
+\end{figure}
+
+\section{Random Forest}
+
+El modelo de random forest construye \texttt{n\_estimators} árboles de decisión usando la totalidad de la muestra para la construcción de cada uno, pero sólo un subconjunto de las características para disminuir la correlación entre los árboles. Usamos la raíz cuadrada del número de características, que es un valor adecuado según lo estudiado en teoría y además, el valor que recomienda la implementación de \textit{sklearn}. Tras esto, hace una media de dichos árboles para controlar el overfitting y reducir la variabilidad.
+
+Elegimos este modelo por su capacidad para conseguir un bajo sesgo combinada con una baja variabilidad. Además, los árboles de decisión son muy adecuados para clasificación cuando el número de clases es elevado (basta asignar una clase a cada nodo), y en nuestro caso tenemos 46 clases.
+
+\subsection{Función de pérdida}
+
+La función de pérdida que intenta minimizar cada uno de los árboles de decisión que promedia random forest es:
+\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T)\]
+donde $|T|$ es el número de nodos del árbol $T$, $N_m$ es el número de instancias que caen en el nodo terminal $m$ y $Q_m(T)$ la medida de impureza del nodo terminal $m$. Como medida de impureza, tomamos Gini Index, aunque la entropía cruzada proporciona resultados parecidos.
+
+\subsection{Estimación de hiperparámetros}
+
+De los múltiples hiperparámetros que podríamos ajustar (profundidad máxima de cada árbol, máximo número de nodos terminales, mínimo número de muestras en cada nodo, \ldots), sólo buscaremos un valor adecuado para el número de estimadores a tener en cuenta, manteniendo el resto por defecto.
+
+Para elegir un valor de \texttt{n\_estimators}, representamos la
+accuracy media obtenida usando validación cruzada con tres
+subdivisiones (hacer la media de tres ejecuciones le da cierta
+estabilidad a los resultados) según diferentes valores de éste
+parámetro entre $50$ y $300$. Observamos que la accuracy es
+creciente con el múmero de estimadores, pero nos preguntamos si merece
+la pena ese crecimiento a costa del incremento del tiempo de ejecución
+que conlleva el uso de un mayor número de estimadores. Por eso,
+tomamos nuevas mediciones entre $200$ y $300$, donde vimos que este
+crecimiento parece saturar a partir de $275$ árboles. Así, decidimos
+que el valor óptimo estaría dentro de este intervalo y repetimos ahí
+el experimento, obteniendo la máxima accuracy con $290$
+estimadores. Puesto que se hizo de $5$ en $5$, para obtener un valor
+más exacto, tomamos mediciones cada $2$ estimadores entre $285$ y
+$295$. En la cuarta gráfica, observamos dos picos, en $287$ y
+$293$. Viendo la escala del eje, concluimos que la accuracy
+satura en este tramo y no compensa seguir aumentando el número de
+estimadores, por lo que elegimos $287$ árboles (el primer pico) como valor para el hiperparámetro.
+
+\begin{figure}[H]
+  \centering
+  \subfigure[Entre $50$ y $300$, de $50$ en $50$]{\includegraphics[width=87mm]{imgs/grafNestimators1}}
+  \subfigure[Entre $200$ y $300$, de $25$ en $25$]{\includegraphics[width=87mm]{imgs/grafNestimators2}}
+  \subfigure[Entre $275$ y $300$, de $5$ en $5$]{\includegraphics[width=87mm]{imgs/grafNestimators3}}
+  \subfigure[Entre $285$ y $295$, de $2$ en $2$]{\includegraphics[width=87mm]{imgs/grafNestimators4}}
+  \caption{Accuracy media de tres validaciones para distintos valores del hiperparámetro \texttt{n\_estimators}}
+  \label{fig:HyperparametersRF}
+\end{figure}
+
+A continuación medimos la accuracy sobre el conjunto de train,
+obteniendo $1$. Esto nos hace pensar que el modelo sobreajusta e
+intentamos regularizar para reducir la complejidad (el número de
+nodos) de cada árbol penalizando con el parámetro $\alpha$. Quedando
+la función a minimizar como:
+\[R_\alpha(T)=R(T)+\alpha|T|\] donde $|T|$ es el número de nodos
+terminales del árbol $T$ y $R$ es la función de pérdida asociada a la impureza de los nodos terminales ($Q$) promediados por el número de muestras que instancias que caen cada nodo ($N$).
+
+Originalmente el valor por defecto de $\alpha$ es 0, hemos probado a
+incrementarlo y medir la accuracy media de tres subdivisiones de validación cruzada para cada uno de los diferentes valores de $\alpha$ probados. Claramente, la accuracy decrece al aumentar alpha. Observando la escala del eje en la última gráfica, concluimos que no mejoramos nada aumentando éste, por lo que mantenemos el valor inicial de $\alpha$, $0$.
+
+\begin{figure}[H]
+  \centering
+  \subfigure[Entre $0$ y $0.0001$, $6$ mediciones]{\includegraphics[width=57mm]{imgs/grafAlpha1}}
+  \subfigure[Entre $0$ y $0.00005$, $11$ mediciones]{\includegraphics[width=57mm]{imgs/grafAlpha2}}
+  \subfigure[Entre $0$ y $0.00001$, $6$ mediciones ]{\includegraphics[width=57mm]{imgs/grafAlpha3}}
+  \caption{Accuracy media de tres validaciones para distintos valores del hiperparámetro $\alpha$}
+  \label{fig:HyperparametersRF}
+\end{figure}
+
+\section{Multilayer Perceptron (MLP)}
+
+El modelo de perceptrón multicapa usado consta de tres capas: la capa de entrada, dos ocultas y una de salida. Como función de activación en cada neurona hemos considerado $\tanh$ y como algoritmo para ajustar los pesos usamos Adam, como nos recomendaron en teoría y como recomienda la documentación de \textit{sklearn} para datasets grandes como es el nuestro.
+
+Al igual que random forest, el perceptrón multicapa tiene suficiente complejidad para obtener un bajo sesgo y facilidad para clasificación no binaria. Para afrontar el problema del sobreajuste, podemos utilizar early stopping como regularización, ya que disponemos de un número elevado de muestras de entrenamiento y podemos permitirnos sacrificar algunas con el fin de combatir el sobreajuste.
+
+Por tanto, consideramos este modelo adecuado para el problema.
+
+\subsection{Estimación de hiperparámetros}
+
+Estimamos el número de neuronas, \texttt{N\_NEUR}, que tiene cada una de las capas ocultas. Como nos recomendaban valores entre $50$ y $100$ hicimos las mediciones de la accuracy media usando validación cruzada con dos subdivisiones del modelo con \texttt{N\_NEUR} en dicho rango. Observamos que el máximo se alcanza en torno a $60$ neuronas por capa, luego repetimos las mediciones ahora en el intervalo $[55,70]$. A pesar de que la diferencia entre la accuracy es leve, seguimos buscando un valor para \texttt{N\_NEUR} en torno a $60$, que es donde conseguimos la accuracy más alta. Al medir la accuracy en el intervalo $[58,62]$, obtenemos el máximo en $59$. Por tanto, cada capa oculta del MLP usado para el ajuste tendrá 59 neuronas.
+
+\begin{figure}[H]
+  \centering
+  \subfigure[Entre $50$ y $100$, de $10$ en $10$]{\includegraphics[width=57mm]{imgs/grafNneur1}}
+  \subfigure[Entre $55$ y $70$, de $5$ en $5$]{\includegraphics[width=57mm]{imgs/grafNneur2}}
+  \subfigure[Entre $58$ y $62$, de $1$ en $1$ ]{\includegraphics[width=57mm]{imgs/grafNneur3}}
+  \caption{Accuracy media de dos validaciones para distintos valores del hiperparámetro \texttt{N\_NEUR}}
+  \label{fig:HyperparametersRF}
 \end{figure}
 
 \end{document}
