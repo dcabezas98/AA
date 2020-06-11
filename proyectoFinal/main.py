@@ -8,14 +8,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from itertools import product
-
 from preprocessing import preprocessing, polynomial
-from model import modelPerformance, modelAccuracy
 from random_forest import grafNestimators, grafAlpha
 from mlp import grafNneur
 from logistic_regression import grafLRAlpha
 
+from sklearn.metrics import accuracy_score, confusion_matrix
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import VarianceThreshold
@@ -26,8 +24,11 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import SGDClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import SGDClassifier
+
+# Validation score
+VALIDATION=True
 
 # For 2D visualization of DATA
 VISUALIZE2D=False
@@ -35,8 +36,8 @@ VISUALIZE2D=False
 # To show that there are no features with null variance
 VARTHRESH=False
 
-# Generate graphs for hyperparameter selections (take several hours)
-PARAMSELECT=True
+# Generate graphs for hyperparameter selections (takes several hours)
+PARAMSELECT=False
 
 # Save greyscale data to disc
 PNG_TO_NP=False
@@ -45,7 +46,7 @@ PNG_TO_NP=False
 SAVE_PRE=False
 
 # Load preprocecessed data directly from disc
-LOAD_PRE=True
+LOAD_PRE=False
 
 # Paths
 CHARACTERS='datos/characters.txt'
@@ -64,6 +65,9 @@ RF_ALPHA=0 # Cost-Complexity Parameter
 
 # Multi-Layer Perceptron:
 MLP_NNEURS=59
+
+# Logistic Regression
+LR_ALPHA=4e-5
 
 # Names of classes
 with open(CHARACTERS,'r') as f:
@@ -105,6 +109,13 @@ def visualize2D(x,y,classes=''):
     x2=TSNE(n_components=2,init=x2).fit_transform(x) # TSNE projection
     plot2D(x2,y,'TSNE',classes)
     
+# Accuracy and confusion matrix
+def modelPerformance(estimator, train, train_label, test, test_label):
+    estimator.fit(train, train_label)
+    pred = estimator.predict(test)
+    acc = accuracy_score(test_label, pred)
+    conf_mat=confusion_matrix(test_label, pred, normalize='all')
+    return acc, conf_mat
 
 # Main
 if __name__ == "__main__":
@@ -122,14 +133,26 @@ if __name__ == "__main__":
         print('Cargando datos')
         train, train_label = loadGrey(TRAIN_GRAY)
         test, test_label = loadGrey(TEST_GRAY)
+        print('Número de características:',train.shape[1])
         print('Preprocesando datos')
         train = preprocessing(train)
         test = preprocessing(test)
+    
+    print('Número de características:',train.shape[1])
 
     if SAVE_PRE:
         print('Guardando datos preprocesados')
         np.savez_compressed(TRAIN_PRE, train, train_label)
         np.savez_compressed(TEST_PRE, test, test_label)
+
+    # New polynomial features for lineal model
+    trainLin=polynomial(train,4)
+    stdScaler=StandardScaler().fit(trainLin)
+    trainLin=stdScaler.transform(trainLin)
+    testLin=polynomial(test,4)
+    testLin=stdScaler.transform(trainLin)
+    print('Características para el modelo lineal:', trainLin.shape[1])
+    input("\n--- Pulsar tecla para continuar ---\n")
 
     if VISUALIZE2D: # Generate 2D visualization
         x, x1, y, y1 = train_test_split(train, train_label,stratify=train_label, train_size=0.4)
@@ -145,57 +168,85 @@ if __name__ == "__main__":
         x2=[x[i] for i in range(len(x)) if 37<=y[i]<=46] # Classes to plot
         y2=[y[i] for i in range(len(y)) if 37<=y[i]<=46]
         visualize2D(x2,y2,'dígitos del 0 al 9')
+
+        input("\n--- Pulsar tecla para continuar ---\n")
     
     if VARTHRESH: # To show that there are no useless (variance 0) features
         print('Características tras preprocesado:', train.shape[1])
         varthresh = VarianceThreshold()
         train=varthresh.fit_transform(train)
         print('Características tras eliminar las de varianza nula:', train.shape[1])
+        input("\n--- Pulsar tecla para continuar ---\n")
 
     # For hyperparameters selection
     if PARAMSELECT:
         # Random Forest
-        #grafNestimators(train, train_label)
-        #grafAlpha(train, train_label)
+        grafNestimators(train, train_label)
+        grafAlpha(train, train_label)
         # MLP
-        #grafNneur(train, train_label)
-        # LogisticRegression
-        train2=polynomial(train,4)
-        train2=StandardScaler().fit_transform(train2)
-        grafLRAlpha(train2, train_label)
+        grafNneur(train, train_label)
+        # Logistic Regression
+        grafLRAlpha(trainLin, train_label)
 
+    # Models
+    rf=RandomForestClassifier(n_estimators=RF_N_ESTIMATORS, ccp_alpha=RF_ALPHA, n_jobs=4) # Random Forest
+    mlp=MLPClassifier(hidden_layer_sizes=(MLP_NNEURS,MLP_NNEURS),activation='tanh',max_iter=800,early_stopping=True) # MLP
+    lr=SGDClassifier(loss='log', alpha=LR_ALPHA, n_jobs=4, max_iter=2000) # Logistic Regression
 
-    # Split validation set from train data
-    # train, val, train_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.7, test_size=0.3)
+    # Validation scores
+    if VALIDATION:
+        # Split validation set from train data
+        tra, val, tra_label, val_label = train_test_split(train, train_label, stratify=train_label, train_size=0.8, test_size=0.2)
 
-    print('\nRandom Forest:\n')
+        # Split validation set from train data for linear model
+        traLin, valLin, traLin_label, valLin_label = train_test_split(trainLin, train_label, stratify=train_label, train_size=0.8, test_size=0.2)
 
-    '''
-    rf=RandomForestClassifier(n_estimators=RF_N_ESTIMATORS, ccp_alpha=a, n_jobs=4)
-    rf.fit(train, train_label)
-    print('Random Forest Accuracy: ', rf.score())
-    '''
+        print('Estimaciones por validación')
+        '''
+        print('\nRandom Forest:')
+        rf.fit(tra, tra_label)
+        print('Train Accuracy:',rf.score(tra,tra_label))
+        print('Validation Accuracy:', rf.score(val,val_label))
+        '''
+        
+        #input("\n--- Pulsar tecla para continuar ---\n")
+
+        print('\nMulti-Layer Perceptron (MLP):')
+        mlp.fit(tra,tra_label)
+        print('Train Accuracy:',mlp.score(tra,tra_label))
+        print('Validation Accuracy:', mlp.score(val,val_label))
+        
+        #input("\n--- Pulsar tecla para continuar ---\n")
+        '''
+        print('\nRegresión Logística:')
+        lr.fit(traLin,traLin_label)
+        print('Train Accuracy:',lr.score(traLin,traLin_label))
+        print('Validation Accuracy:', lr.score(valLin,valLin_label))
+        '''
+
+        #input("\n--- Pulsar tecla para continuar ---\n")
 
     exit()
-    print('\nMLP:\n')
-    mlp=MLPClassifier(hidden_layer_sizes=(100,100),activation='tanh',max_iter=400,early_stopping=False)
-    mlp.fit(train,train_label)
-    print('MLP:',mlp.score(val,val_label))
-    
-    print('\nRegresión Logística:\n')
 
-    print(train.shape)
+    print('Desempeño sobre Test')
+    '''
+    print('\nRandom Forest:')
+    acc, conf_mat = modelPerformance(rf,train,train_label,test,test_label)
+    print('Accuracy:',acc)
+    #visualizeMatrix(conf_mat,'Random Forest:\nMatriz de confusión sobre Test',conf=True)
+    '''
+    #input("\n--- Pulsar tecla para continuar ---\n")
 
-    lr=LogisticRegression(max_iter=1000)
-    lr.fit(train,train_label)
-    print('LR:',lr.score(val,val_label))
+    print('\nMulti-Layer Perceptron (MLP):')
+    acc, conf_mat = modelPerformance(mlp,train,train_label,test,test_label)
+    print('Accuracy:',acc)
+    #visualizeMatrix(conf_mat,'MLP:\nMatriz de confusión sobre Test',conf=True)
 
-    sgd=SGDClassifier(loss='log')
-    sgd.fit(train,train_label)
-    print('SGD:',sgd.score(val,val_label))
-
-    print('\nAdaBoost:\n')
-    exit()
-    ab=AdaBoostClassifier(n_estimators=200, learning_rate=0.1)
-    ab.fit(train,train_label)
-    print('AB:',ab.score(val,val_label))    
+    #input("\n--- Pulsar tecla para continuar ---\n")
+    '''
+    print('\nRegresión Logística:')
+    acc, conf_mat = modelPerformance(lr,train,train_label,test,test_label)
+    print('Accuracy:',acc)
+    #visualizeMatrix(conf_mat,'Regresión Logística:\nMatriz de confusión sobre Test',conf=True)
+    '''
+    #input("\n--- Pulsar tecla para continuar ---\n")
