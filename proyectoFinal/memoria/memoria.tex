@@ -183,18 +183,31 @@ a cabo con la función \texttt{block\_reduce} de \textit{skimage}.
   \label{fig:downsampling}
 \end{figure}
 
-\subsection{Justificación del preprocesamiento}
+\subsection{Utilidad del preprocesamiento}
 
-Queremos comprobar que el preprocesamiento que hemos realizado tiene realmente buenos resultados y ayudará al posterior entrenamiento de los datos. Usando los 3 modelos escogidos para el ajuste con sus respectivos hiperparámetros previamente seleccionados (hablaremos de esto más detenidamente en secciones posteriores) veremos la accuracy obtenida sobre nuestro subconjunto de validación en cada una de las siguientes comparaciones.
+Queremos comprobar que el preprocesamiento que hemos realizado
+realmente ayudará al posterior entrenamiento de los modelos y mejorará
+los resultados. Usando los 3 modelos escogidos para el ajuste con sus
+respectivos hiperparámetros previamente seleccionados (hablaremos de
+esto más detenidamente en secciones posteriores) veremos la accuracy
+obtenida sobre nuestro subconjunto de validación en cada una de las
+siguientes comparaciones.
 
-% Mostrar datos antes y después preprocesamiento
-% Mostrar datos de con/sin variables donde nos mojamos
+Durante el preprocesamiento, hemos tomado dos decisiones que podrían
+afectar al desempeño posterior de los modelos. Esas dos decisiones
+son: el valor de la variable \texttt{WIDTH} y usar o no
+\texttt{block\_reduce} para reducir la dimensionalidad.
 
-Durante el preprocesamiento, hemos tomado dos decisiones que podrían afectar al desempeño posterior de los modelos. Esas dos decisiones son: el valor de la variable \texttt{WIDTH} y usar o no \texttt{block\_reduce} para reducir la dimensionalidad.
+Para el valor de la variable \texttt{WIDTH} hemos consderado $28$, ya
+que muchos caracteres ocupan toda la imagen y no se llegan a recortar,
+y $24$, para intentar encontrar un tamaño intermedio entre las que se
+recortan y las que no.
 
-Para el valor de la variable \texttt{WIDTH} hemos consderado $28$, ya que muchos caracteres ocupan toda la imagen y no se llegan a recortar, y $24$, para intentar encontrar un tamaño intermedio entre las que se reescalan y las que no.
-
-La decisión de reducir dimensionalidad con \texttt{block\_reduce} es arriesgada porque se produce una pérdida de información de los datos. Tenemos que contrastar si esa pérdida de información es significativa atendiedo a las ventajas que supone hacerla: simplifica el problema (menor dimensionalidad) y reduce los tiempos de ejecución.
+La decisión de reducir dimensionalidad con \texttt{block\_reduce} es
+arriesgada porque se produce una pérdida de información de los
+datos. Tenemos que contrastar si esa pérdida de información es
+significativa atendiedo a las ventajas que supone hacerla: simplifica
+el problema (menor dimensionalidad) y reduce los tiempos de ejecución.
 
 Los resultados obtenidos son (con \texttt{block\_reduce}=True):
 
@@ -204,8 +217,10 @@ Los resultados obtenidos son (con \texttt{block\_reduce}=True):
 \multicolumn{1}{|c|}{Modelos}& \textbf{\texttt{WIDTH} = 28} &
 \textbf{\texttt{WIDTH} = 24}  \\ \hline
   Random Forest         & 0.9195652173913044 & 0.9117647058823529 \\
-  Multilayer Perceptron & 0.9512787723785167 & 0.9391943734015346 \\
-  Regresión Logística   & 0.7273657289002557 & 0.7289002557544757 \\\hline
+  Multilayer Perceptron & 0.8879156010230179 & 0.885230179028133 \\
+  Regresión Logística   & 0.7273657289002557 & 0.7289002557544757 \\
+  Media (no lineales) & 0.903740409 & 0.898497442 \\
+  Media & 0.844948849 & 0.841965047 \\ \hline
 \end{tabular}
 \end{center}
 
@@ -217,22 +232,26 @@ Los resultados obtenidos son (con \texttt{block\_reduce}=False):
 \multicolumn{1}{|c|}{Modelos}& \textbf{\texttt{WIDTH} = 28} &
 \textbf{\texttt{WIDTH} = 24}  \\ \hline
   Random Forest         & 0.9115728900255754 & 0.9159846547314578 \\
-  Multilayer Perceptron & 0.9398497442455243 & 0.9539641943734015 \\
-  Regresión Logística   & Error de memoria   & Error de memoria \\\hline
+  Multilayer Perceptron & 0.8574168797953964 & 0.8688618925831202 \\
+  Regresión Logística   & Error de memoria   & Error de memoria \\
+  Media (no lineales) & 0.884494885 & 0.892423274 \\ \hline
 \end{tabular}
 \end{center}
 
-A la vista de los resultados obtenidos, hemos decidido que merece la pena usar \texttt{block\_reduce}. El valor de \texttt{WIDTH} que elegimos es $28$.
+A la vista de los resultados obtenidos, hemos decidido que merece la
+pena usar \texttt{block\_reduce}. El valor de \texttt{WIDTH} que
+elegimos es $28$. Esta configuración presenta la mayor media y el
+mayor máximo de las accuracy en las validaciones de los modelos.
 
 Los resultados tras el preprocesamiento comparándolos con los datos en crudo son:
 \begin{center}
 \begin{tabular}{|c|c|c|}
-\hline
-\multicolumn{1}{|c|}{Modelos}& \textbf{Antes del preprocesamiento} &
-\textbf{Después del preprocesamiento}  \\ \hline
+  \hline
+  \multicolumn{1}{|c|}{Modelos}& \textbf{Antes del preprocesamiento} &
+                                                                       \textbf{Después del preprocesamiento}  \\ \hline
   Random Forest         & 0.9070971867007672 & 0.9195652173913044 \\
-  Multilayer Perceptron & 0.9370204603580563 & 0.9512787723785167 \\
-  Regresión Logística   & Error de memoria   & 0.7273657289002557 \\\hline
+  Multilayer Perceptron & 0.8464194373401535 & 0.882161125319693 \\
+  Regresión Logística   & Error de memoria   & 0.7273657289002557 \\ \hline
 \end{tabular}
 \end{center}
 
@@ -257,9 +276,13 @@ queden proyectados cerca.
 
 El gran número de datos hace que estas representaciones tarden mucho
 tiempo en generarse y estén muy cargadas, por lo que sólo
-representamos el 40\% de los datos (elegidos aleatoriamente). Para ellod usamos la función \texttt{train\_test\_split} de \textit{sklearn} e indicamos mediante la opción \texttt{stratify} que queremos
-preservar la proporción de elementos de cada clase en cada uno de los
-conjuntos, de forma que sigan perfectamente balanceadas. Debido a la abundancia de datos, este 40\% es suficientemente representativo de la distribución de los datos.
+representamos el 40\% de los datos (elegidos aleatoriamente). Para
+ellod usamos la función \texttt{train\_test\_split} de
+\textit{sklearn} e indicamos mediante la opción \texttt{stratify} que
+queremos preservar la proporción de elementos de cada clase en cada
+uno de los conjuntos, de forma que sigan perfectamente
+balanceadas. Debido a la abundancia de datos, este 40\% es
+suficientemente representativo de la distribución de los datos.
 
 Además, debido al elevado número de clases, no podemos representar
 cada un con un color diferente de forma que sean fácilmente
@@ -333,27 +356,35 @@ asigna la clase con mayor probabilidad (SoftMax).
 
 Para intentar compensar la menor potencia de este modelo, incorporamos
 algunas características polinómicas. Debido al elevado número de
-variables, no incorporamos los términos cruzados, sólo los cuadrados,
-cubos y cuartas potencias de cada una de las características
-originales, multiplicando el número de variables por 4. Esto no sería
-viable de no haber realizado la reducción de dimensionalidad por
-downsampling. Además, la documentación de esta función recomienda que
-las características presenten varianza 1 y media 0 para una
-convergencia más rápida del SGD, realizamos esto ajustando un
-StandardScaler (de \textit{sklearn}) a los datos de training y
-aplicándolo para transformar tanto éstos como los de test.
+variables, no incorporamos los términos cruzados (provoca error de
+memoria), sólo los cuadrados, cubos y cuartas potencias de cada una de
+las características originales, multiplicando el número de variables
+por 4. Esto no sería viable de no haber realizado la reducción de
+dimensionalidad por downsampling (provoca error de memoria). Además,
+la documentación de esta función recomienda que las características
+presenten varianza 1 y media 0 para una convergencia más rápida del
+SGD, realizamos esto ajustando un StandardScaler (de \textit{sklearn})
+a los datos de training y aplicándolo para transformar tanto éstos
+como los de test.
 
 \subsection{Estimación de hiperparámetros}
 
 \subsection{Función de pérdida y regularización}
 
-Dada una muestra de tamaño $N$, donde cada dato tiene $d$ características, y un problema de clasificación multietiqueta con $K$ etiquetas diferentes, la función de pérdida de este modelo es la pérdida logarítmica:
+Dada una muestra de tamaño $N$, donde cada dato tiene $d$
+características, y un problema de clasificación multietiqueta con $K$
+etiquetas diferentes, la función de pérdida de este modelo es la
+pérdida logarítmica:
 
 \[ E(w_1, \ldots, w_k) = -\ln L(Y|w_1, \ldots, w_k) = -\sum\limits_{n=0}^{N}\sum\limits_{k=0}^{K} y_{nk}\ln \sigma (w^T_kx_n)\]
 
-donde $x_n$ el vector de características de la instancia $n$-ésima, $w_k$ es la fila $k$-ésima de una matriz de pesos $w$ de dimensión $K \times d$ e $y_{nk} = 1$ si la instancia $n$-ésima pertenece a la clase $k$ y $0$ en caso contrario.
+donde $x_n$ el vector de características de la instancia $n$-ésima,
+$w_k$ es la fila $k$-ésima de una matriz de pesos $w$ de dimensión
+$K \times d$ e $y_{nk} = 1$ si la instancia $n$-ésima pertenece a la
+clase $k$ y $0$ en caso contrario.
 
-La implementación de este modelo minimiza esta función de pérdida usando gradiente descendente estocástico.
+La implementación de este modelo minimiza esta función de pérdida
+usando gradiente descendente estocástico.
 
 REGULARIZACIÓN
 
@@ -462,7 +493,8 @@ complejidad para obtener un bajo sesgo y facilidad para clasificación
 no binaria. Para afrontar el problema del sobreajuste, podemos
 utilizar early stopping como regularización, ya que disponemos de un
 número elevado de muestras de entrenamiento y podemos permitirnos
-sacrificar algunas con el fin de combatir el sobreajuste. Por tanto, consideramos este modelo adecuado para el problema.
+sacrificar algunas con el fin de combatir el sobreajuste. Por tanto,
+consideramos este modelo adecuado para el problema.
 
 \subsection{Estimación de hiperparámetros}
 
@@ -489,13 +521,22 @@ oculta del MLP usado para el ajuste tendrá 59 neuronas.
 
 \subsection{Función de pérdida y regularización}
 
-En la documentación nos indican que la función de pérdida usada en la implementación de \texttt{MLPClassifier} es la pérdida logarítmica, que para clasificación multietiqueta, con un conjunto de $K$ etiquetas, es:
+En la documentación nos indican que la función de pérdida usada en la
+implementación de \texttt{MLPClassifier} es la pérdida logarítmica,
+que para clasificación multietiqueta, con un conjunto de $K$
+etiquetas, es:
 
 \[ L_{\log}(Y,P) = -\log Pr(Y|P) = -\frac{1}{N}\sum\limits_{i=0}^{N-1}\sum\limits_{k=0}^{K-1} y_{ik}\log p_{ik}\]
 
-donde $Y$ es uma matriz codificada en binario con las verdaderas etiquetas de la muestra, es decir, $y_{ik} = 1$ si el dato $x_i$ tiene etiqueta $k$ (y $0$ en otro caso) y $P$ es una matriz de estimaciones probabilísticas que depende de los pesos.
+donde $Y$ es uma matriz codificada en binario con las verdaderas
+etiquetas de la muestra, es decir, $y_{ik} = 1$ si el dato $x_i$ tiene
+etiqueta $k$ (y $0$ en otro caso) y $P$ es una matriz de estimaciones
+probabilísticas que depende de los pesos.
 
-Para regularizar usamos Early Stopping (\texttt{early\_stopping = True}). Esto separa un 10\% de los datos de ajuste para validación y termina el entrenamiento cuando la accuracy de este conjunto no mejora tras 10 épocas consecutivas.
+Para regularizar usamos Early Stopping (\texttt{early\_stopping =
+  True}). Esto separa un 10\% de los datos de ajuste para validación y
+termina el entrenamiento cuando la accuracy de este conjunto no mejora
+en al menos $10^{-4}$ por 10 iteraciones consecutivas.
 
 %Meter resultados
 

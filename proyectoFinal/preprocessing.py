@@ -17,7 +17,7 @@ from skimage.transform import resize
 from joblib import Parallel, delayed
 
 # Tuneable parameters
-WIDTH=24 # WIDTH to resize
+WIDTH=28 # WIDTH to resize
 BLOCK_REDUCE=True # Wether or not to perform block reduce
 
 # Center character by crop and resize image

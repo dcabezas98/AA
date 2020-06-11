@@ -28,7 +28,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import SGDClassifier
 
 # Validation score
-VALIDATION=True
+VALIDATION=False
 
 # For 2D visualization of DATA
 VISUALIZE2D=False
@@ -46,7 +46,7 @@ PNG_TO_NP=False
 SAVE_PRE=False
 
 # Load preprocecessed data directly from disc
-LOAD_PRE=False
+LOAD_PRE=True
 
 # Paths
 CHARACTERS='datos/characters.txt'
@@ -202,21 +202,20 @@ if __name__ == "__main__":
         traLin, valLin, traLin_label, valLin_label = train_test_split(trainLin, train_label, stratify=train_label, train_size=0.8, test_size=0.2)
 
         print('Estimaciones por validación')
-        '''
+        
         print('\nRandom Forest:')
         rf.fit(tra, tra_label)
         print('Train Accuracy:',rf.score(tra,tra_label))
         print('Validation Accuracy:', rf.score(val,val_label))
-        '''
         
-        #input("\n--- Pulsar tecla para continuar ---\n")
+        input("\n--- Pulsar tecla para continuar ---\n")
 
         print('\nMulti-Layer Perceptron (MLP):')
         mlp.fit(tra,tra_label)
         print('Train Accuracy:',mlp.score(tra,tra_label))
         print('Validation Accuracy:', mlp.score(val,val_label))
         
-        #input("\n--- Pulsar tecla para continuar ---\n")
+        input("\n--- Pulsar tecla para continuar ---\n")
         '''
         print('\nRegresión Logística:')
         lr.fit(traLin,traLin_label)
@@ -224,29 +223,27 @@ if __name__ == "__main__":
         print('Validation Accuracy:', lr.score(valLin,valLin_label))
         '''
 
-        #input("\n--- Pulsar tecla para continuar ---\n")
-
-    exit()
+        input("\n--- Pulsar tecla para continuar ---\n")
 
     print('Desempeño sobre Test')
-    '''
+    
     print('\nRandom Forest:')
     acc, conf_mat = modelPerformance(rf,train,train_label,test,test_label)
     print('Accuracy:',acc)
-    #visualizeMatrix(conf_mat,'Random Forest:\nMatriz de confusión sobre Test',conf=True)
-    '''
-    #input("\n--- Pulsar tecla para continuar ---\n")
+    visualizeMatrix(conf_mat,'Random Forest:\nMatriz de confusión sobre Test',conf=True)
+    
+    input("\n--- Pulsar tecla para continuar ---\n")
 
     print('\nMulti-Layer Perceptron (MLP):')
     acc, conf_mat = modelPerformance(mlp,train,train_label,test,test_label)
     print('Accuracy:',acc)
-    #visualizeMatrix(conf_mat,'MLP:\nMatriz de confusión sobre Test',conf=True)
+    visualizeMatrix(conf_mat,'MLP:\nMatriz de confusión sobre Test',conf=True)
 
-    #input("\n--- Pulsar tecla para continuar ---\n")
-    '''
+    input("\n--- Pulsar tecla para continuar ---\n")
+    
     print('\nRegresión Logística:')
     acc, conf_mat = modelPerformance(lr,train,train_label,test,test_label)
     print('Accuracy:',acc)
-    #visualizeMatrix(conf_mat,'Regresión Logística:\nMatriz de confusión sobre Test',conf=True)
-    '''
-    #input("\n--- Pulsar tecla para continuar ---\n")
+    visualizeMatrix(conf_mat,'Regresión Logística:\nMatriz de confusión sobre Test',conf=True)
+    
+    input("\n--- Pulsar tecla para continuar ---\n")
