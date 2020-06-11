@@ -135,9 +135,23 @@ transformados, aunque en el fichero \texttt{main.py} se puede alterar
 la variable \texttt{PNG\_TO\_NP} para ejecutar el script que carga las
 imágenes y almacena estos datos en disco.
 
-\section{Preprocesamiento}
+\section{Métrica de error}
 
-% Comentar justificaciones: 3 modelos ajustados con parámetros por defecto. WIDTH y BLOCK_REDUCE
+La métrica de error que usaremos para contrastar diferentes modelos, hiperparámetros y alternativas será la accuracy, que es la proporción de etiquetas que predice correctamente el modelo. Usaremos esta métrica para ver realmente cuál es el desempeño del modelo y cómo de bien clasifica las etiquetas. Como los datos están balanceados, es una métrica adecuada de la bondad del modelo, además de fácil de interpretar.
+
+También podemos visualizar la matriz de confusión. Es una matriz
+cuadrada de orden el número de clases con números naturales como
+entradas, en la que el valor de la posición $(i, j)$ representa el
+número de ejemplos de la clase $i$-ésima que han sido clasificados por
+el modelo como elementos de la clase $j$-ésima. Claramente interesa
+que la matriz de confusión sea diagonal, ya que las entradas de la
+forma $(i, i)$ representan éxitos a la hora de clasificar y las
+entradas $(i, j)$ con $j \neq i$ representan errores. De hecho, la
+accuracy se obtiene dividiendo la traza de la matriz de confusión (el
+número de ejemplos bien clasificados) entre el número total de
+ejemplos.
+
+\section{Preprocesamiento}
 
 El preprocesamiento se realiza
 imagen a imagen, siendo el resultado sólo dependiente de la propia
@@ -363,11 +377,27 @@ por 4. Esto no sería viable de no haber realizado la reducción de
 dimensionalidad por downsampling (provoca error de memoria). Además,
 la documentación de esta función recomienda que las características
 presenten varianza 1 y media 0 para una convergencia más rápida del
-SGD, realizamos esto ajustando un StandardScaler (de \textit{sklearn})
+SGD cuando se utiliza el learning rate por defecto. Realizamos esto ajustando un StandardScaler (de \textit{sklearn})
 a los datos de training y aplicándolo para transformar tanto éstos
 como los de test.
 
+Durante el entrenamiento del modelo recibimos warnings acerca de la convergencia, por lo que tuvimos que incrementar el número máximo de iteraciones (\texttt{max\_iter}) a $2000$. 
+
 \subsection{Estimación de hiperparámetros}
+
+El hiperparámetro que ajustaremos del modelo lineal es $\alpha$ (el coeficiente que penaliza en la regularización Ridge). En la implementación del modelo, el learning rate se calcula: $\eta = \frac{1}{\alpha (t + t_0)}$, con $t_0$ escogido por una heurística propuesta por Leon Bottou y $t$ denotando la etapa.
+
+Para estimar el valor de $\alpha$, que necesariamente tiene que ser distinto de cero para usar dicho learning rate, ajustamos el modelo con varios valores. En la primera gráfica, podemos observar que la accuracy del modelo disminuye al aumentar el valor de alpha, así que realizamos mediciones con valores menores. En la segunda, vimos que el pico se alcanzaba entre $0.00001$ y $0.0001$, por lo que volvimos a repetir el experimento ahora entre $0.00002$ y $0.00007$. Pudimos comprobar que el máximo se alcanza entre $0.00003$ y $0.00004$, así que volvimos a ajustar el modelo con valores de $\alpha$ comprendidos entre $0.000025$ y $0.000045$. En esta gráfica podemos observar que la diferencia de accuracy entre estos valores es bastante menor. Como se alcanza el mayor valor de accuracy en $\alpha = 0.00004$, éste es el valor que tomaremos para el ajuste.
+
+\begin{figure}[H]
+  \centering
+  \subfigure[Entre $0.00005$ y $0.005$, $11$ mediciones]{\includegraphics[width=60mm]{imgs/grafLRalpha1}}
+  \subfigure[Entre $0.00001$ y $0.00035$, $10$ mediciones]{\includegraphics[width=60mm]{imgs/grafLRalpha2}}
+  \subfigure[Entre $0.00002$ y $0.00007$, $6$ mediciones]{\includegraphics[width=60mm]{imgs/grafLRalpha3}}
+  \subfigure[Entre $0.000025$ y $0.000045$, $5$ mediciones]{\includegraphics[width=60mm]{imgs/grafLRalpha4}}
+  \caption{Estimación del parámetro $\alpha$}
+  \label{fig:digit0-9}
+\end{figure}
 
 \subsection{Función de pérdida y regularización}
 
@@ -386,8 +416,11 @@ clase $k$ y $0$ en caso contrario.
 La implementación de este modelo minimiza esta función de pérdida
 usando gradiente descendente estocástico.
 
-REGULARIZACIÓN
+Para disminuir la variabilidad del modelo, usamos regularización Ridge. Es adecuada porque todas las características son relevantes ya que tienen la misma naturaleza y durante el preprocesado hemos eliminado aquellas que podrían no aportar demasiada información.
 
+Así, el error que minimizamos en regularización es $E_{aug} = E(w_1, \ldots, w_k) + \alpha \|w\|^2$, donde $\|.\|^2$ denota la norma de Frobenius.
+
+Como hemos discutido en la sección de selección de hiperparámetros, usaremos $\alpha = 0.00004$.
 
 \section{Random Forest}
 
@@ -496,6 +529,8 @@ número elevado de muestras de entrenamiento y podemos permitirnos
 sacrificar algunas con el fin de combatir el sobreajuste. Por tanto,
 consideramos este modelo adecuado para el problema.
 
+Durante el entrenamiento del modelo recibimos warnings acerca de la convergencia, por lo que tuvimos que incrementar el número máximo de iteraciones (\texttt{max\_iter}) a $800$. 
+
 \subsection{Estimación de hiperparámetros}
 
 Estimamos el número de neuronas, \texttt{N\_NEUR}, que tiene cada una
@@ -538,6 +573,22 @@ Para regularizar usamos Early Stopping (\texttt{early\_stopping =
 termina el entrenamiento cuando la accuracy de este conjunto no mejora
 en al menos $10^{-4}$ por 10 iteraciones consecutivas.
 
-%Meter resultados
+Como ya comentamos, usamos early stopping para regularizar el modelo. La accuracy obtenida con y sin regularización es:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+  \hline
+  \multicolumn{1}{|c|}{}& \textbf{Sin early stopping} &
+                                                                       \textbf{Con early stopping}  \\ \hline
+  Train Accuracy      & 0.9940217391304348 & 0.941128516624041 \\
+  Validation Accuracy & 0.8642583120204603 &  0.8879156010230179 \\ \hline
+\end{tabular}
+\end{center}
+
+Como podemos observar, regularizando el modelo conseguimos un mejor desempeño en el conjunto de valización, claramente reduciendo el sobreajuste.
+
+\section{Desempeño de los modelos}
+
+
 
 \end{document}
