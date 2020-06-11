@@ -83,11 +83,6 @@ def visualizeMatrix(m, title='', conf=False):
         plt.xlabel('Predicciones')
     plt.show()
     
-# Class name from integer label
-def className(n,c=characters):
-    assert 1<=n<=46
-    return c[n-1]
- 
 # Load greyscale vector
 def loadGrey(filename):
     X=np.load(filename)
@@ -145,6 +140,13 @@ if __name__ == "__main__":
         np.savez_compressed(TRAIN_PRE, train, train_label)
         np.savez_compressed(TEST_PRE, test, test_label)
 
+    if VARTHRESH: # To show that there are no useless (variance 0) features
+        print('Características tras preprocesado:', train.shape[1])
+        varthresh = VarianceThreshold()
+        train=varthresh.fit_transform(train)
+        print('Características tras eliminar las de varianza nula:', train.shape[1])
+        input("\n--- Pulsar tecla para continuar ---\n")
+
     # New polynomial features for lineal model
     trainLin=polynomial(train,4)
     stdScaler=StandardScaler().fit(trainLin)
@@ -171,13 +173,6 @@ if __name__ == "__main__":
 
         input("\n--- Pulsar tecla para continuar ---\n")
     
-    if VARTHRESH: # To show that there are no useless (variance 0) features
-        print('Características tras preprocesado:', train.shape[1])
-        varthresh = VarianceThreshold()
-        train=varthresh.fit_transform(train)
-        print('Características tras eliminar las de varianza nula:', train.shape[1])
-        input("\n--- Pulsar tecla para continuar ---\n")
-
     # For hyperparameters selection
     if PARAMSELECT:
         # Random Forest
