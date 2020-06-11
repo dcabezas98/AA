@@ -100,21 +100,20 @@ corresponden a símbolos trazados por distintas personas o no, con lo
 que tenemos otra razón más para respetar la partición de conjuntos de
 train y test existente.
 
-% Extraemos un conjunto de validación del 30\% de los datos de
-% entrenamiento para consultar la eficacia práctica de ciertas
-% decisiones que tomamos durante el preprocesamiento, así como para
-% estimar los hiperparámetros usados en cada modelo. Esto nos deja con
-% 54740 (70\%) datos para entrenar cada alternativa y 23460 datos para
-% validar. Debido a la abundancia de datos, podemos esperar que los
-% scores obtenidos al validar sean representativos de la bondad real de
-% un modelo o procesamiento, así que decidimos no usar validación
-% cruzada, ya que es computacionalmente muy costosa y el ajuste de los
-% modelos es lento debido a la cantidad de datos.
+Extraemos un conjunto de validación del 20\% de los datos de
+entrenamiento para consultar la eficacia práctica de ciertas
+decisiones que tomamos durante el preprocesamiento. Esto nos deja con
+62560 (80\%) datos para entrenar cada alternativa y 15640 datos para
+validar. Debido a la abundancia de datos, podemos esperar que los
+scores obtenidos al validar sean representativos de la bondad real de
+un modelo o procesamiento, así que decidimos no usar validación
+cruzada, ya que es computacionalmente muy costosa y el ajuste de los
+modelos es lento debido a la cantidad de datos.
 
-% Para ello usamos la función \texttt{train\_test\_split} de
-% \textit{sklearn} e indicamos mediante la opción \texttt{stratify} que
-% queremos preservar la proporción de elementos de cada clase en cada
-% uno de los conjuntos, de forma que sigan perfectamente balanceadas.
+Para ello usamos la función \texttt{train\_test\_split} de
+\textit{sklearn} e indicamos mediante la opción \texttt{stratify} que
+queremos preservar la proporción de elementos de cada clase en cada
+uno de los conjuntos, de forma que sigan perfectamente balanceadas.
 
 \subsection{Formato de los datos}
 
@@ -142,7 +141,7 @@ imágenes y almacena estos datos en disco.
 
 El preprocesamiento se realiza
 imagen a imagen, siendo el resultado sólo dependiente de la propia
-imagen y por tanto paralelizable. Para cada imagen realizamos dos operaciones: centrado y reescalado, y downsampling. Tras este proceso, nos quedan $144$ características ($12 \times 12$) y comprobamos con la función \texttt{VarianceThreshold} de \textit{sklearn} que no hay características con varianza $0$ en el conjunto de train (todas aportan algo de información). Consideramos que no es necesario normalizar las variables, ya que todas tienen la misma naturaleza (intensidad de gris en un píxel) y la misma escala (entre $0$ y $1$).
+imagen y por tanto paralelizable. Para cada imagen realizamos dos operaciones: centrado y reescalado, y downsampling. Tras este proceso, nos quedan $196$ características ($14 \times 14$) y comprobamos con la función \texttt{VarianceThreshold} de \textit{sklearn} que no hay características con varianza $0$ en el conjunto de train (todas aportan algo de información). Consideramos que no es necesario normalizar las variables, ya que todas tienen la misma naturaleza (intensidad de gris en un píxel) y la misma escala (entre $0$ y $1$).
 
 \subsection{Centrado y reescalado}
 
@@ -159,7 +158,6 @@ Para calcular la caja englobante del carácter, usamos el
   \texttt{WIDTH $\times$ WIDTH} para trabajar con un tamaño de imagen
   unificado (función \texttt{resize} de \textit{skimage}).
 
-%COMENTAR COMO ELEGIMOS WIDTH, ya que muchas no se recortan
 
 \begin{figure}[H]
   \centering
@@ -167,7 +165,7 @@ Para calcular la caja englobante del carácter, usamos el
   \subfigure[Thresholding y closing]{\includegraphics[width=87mm]{imgs/closing-thresholding.png}}
   \subfigure[Recortado de la caja englobante]{\includegraphics[width=87mm]{imgs/crop.png}}
   \subfigure[Reescalado]{\includegraphics[width=87mm]{imgs/resize.png}}
-  \caption{Proceso de centrado y reescalado sobre una instancia correspondiente al carácter kna}
+  \caption{Proceso de centrado y reescalado sobre una instancia correspondiente al carácter kna\\ (usando \texttt{WIDTH} = 24)}
   \label{fig:centerAndResize}
 \end{figure}
 
@@ -178,15 +176,70 @@ reducción por bloques de la imagen, agrupando cada bloque de 4
 píxeles en uno usando la media de sus valores. Esta reducción se lleva
 a cabo con la función \texttt{block\_reduce} de \textit{skimage}.
 
-% Comentar que esta decisión es arriesgada y que nos hemos basado en
-% validación con los 3 modelos ajustados
-
 \begin{figure}[H]
   \centering
   \includegraphics[width=87mm]{imgs/downsampling.png}
-  \caption{Resultado del preprocesamiento (tras combinar centrado y reescalado con downsampling)}
+  \caption{Resultado del preprocesamiento (tras combinar centrado y reescalado con downsampling usando\\ \texttt{WIDTH} = 24)}
   \label{fig:downsampling}
 \end{figure}
+
+\subsection{Justificación del preprocesamiento}
+
+Queremos comprobar que el preprocesamiento que hemos realizado tiene realmente buenos resultados y ayudará al posterior entrenamiento de los datos. Usando los 3 modelos escogidos para el ajuste con sus respectivos hiperparámetros previamente seleccionados (hablaremos de esto más detenidamente en secciones posteriores) veremos la accuracy obtenida sobre nuestro subconjunto de validación en cada una de las siguientes comparaciones.
+
+% Mostrar datos antes y después preprocesamiento
+% Mostrar datos de con/sin variables donde nos mojamos
+
+Durante el preprocesamiento, hemos tomado dos decisiones que podrían afectar al desempeño posterior de los modelos. Esas dos decisiones son: el valor de la variable \texttt{WIDTH} y usar o no \texttt{block\_reduce} para reducir la dimensionalidad.
+
+Para el valor de la variable \texttt{WIDTH} hemos consderado $28$, ya que muchos caracteres ocupan toda la imagen y no se llegan a recortar, y $24$, para intentar encontrar un tamaño intermedio entre las que se reescalan y las que no.
+
+La decisión de reducir dimensionalidad con \texttt{block\_reduce} es arriesgada porque se produce una pérdida de información de los datos. Tenemos que contrastar si esa pérdida de información es significativa atendiedo a las ventajas que supone hacerla: simplifica el problema (menor dimensionalidad) y reduce los tiempos de ejecución.
+
+Los resultados obtenidos son (con \texttt{block\_reduce}=True):
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\multicolumn{1}{|c|}{Modelos}& \textbf{\texttt{WIDTH} = 28} &
+\textbf{\texttt{WIDTH} = 24}  \\ \hline
+  Random Forest         & 0.9195652173913044 & 0.9117647058823529 \\
+  Multilayer Perceptron & 0.9512787723785167 & 0.9391943734015346 \\
+  Regresión Logística   & 0.7273657289002557 & 0.7289002557544757 \\\hline
+\end{tabular}
+\end{center}
+
+Los resultados obtenidos son (con \texttt{block\_reduce}=False):
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\multicolumn{1}{|c|}{Modelos}& \textbf{\texttt{WIDTH} = 28} &
+\textbf{\texttt{WIDTH} = 24}  \\ \hline
+  Random Forest         & 0.9115728900255754 & 0.9159846547314578 \\
+  Multilayer Perceptron & 0.9398497442455243 & 0.9539641943734015 \\
+  Regresión Logística   & Error de memoria   & Error de memoria \\\hline
+\end{tabular}
+\end{center}
+
+A la vista de los resultados obtenidos, hemos decidido que merece la pena usar \texttt{block\_reduce}. El valor de \texttt{WIDTH} que elegimos es $28$.
+
+Los resultados tras el preprocesamiento comparándolos con los datos en crudo son:
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\multicolumn{1}{|c|}{Modelos}& \textbf{Antes del preprocesamiento} &
+\textbf{Después del preprocesamiento}  \\ \hline
+  Random Forest         & 0.9070971867007672 & 0.9195652173913044 \\
+  Multilayer Perceptron & 0.9370204603580563 & 0.9512787723785167 \\
+  Regresión Logística   & Error de memoria   & 0.7273657289002557 \\\hline
+\end{tabular}
+\end{center}
+
+Podemos observar que con el preprocesamiento hemos conseguido reducir
+notablemente la dimensionalidad del problema: pasando de
+$28\times 28=784$ variables a $14\times 14=196$. Además, mejoramos en
+cierta medida la precisión de los modelos.
 
 \section{Visualización de los datos mediante proyección 2D}
 
@@ -204,14 +257,18 @@ queden proyectados cerca.
 
 El gran número de datos hace que estas representaciones tarden mucho
 tiempo en generarse y estén muy cargadas, por lo que sólo
-representamos el 40\% de los datos. Además, debido al elevado número
-de clases, no podemos representar cada un con un color diferente de
-forma que sean fácilmente distinguibles, por eso las representamos
-separadas en 3 gráficas diferentes: caracteres del 1 al 18, caracteres
-del 19 al 36 y dígitos (del 0 al 9). Nos interesa ver si las
-instancias de la misma clase están cerca entre sí, no la localización
-en el espacio. Por tanto omitimos la leyenda (que además sería
-extremadamente larga y taparía el gráfico).
+representamos el 40\% de los datos (elegidos aleatoriamente). Para ellod usamos la función \texttt{train\_test\_split} de \textit{sklearn} e indicamos mediante la opción \texttt{stratify} que queremos
+preservar la proporción de elementos de cada clase en cada uno de los
+conjuntos, de forma que sigan perfectamente balanceadas. Debido a la abundancia de datos, este 40\% es suficientemente representativo de la distribución de los datos.
+
+Además, debido al elevado número de clases, no podemos representar
+cada un con un color diferente de forma que sean fácilmente
+distinguibles, por eso las representamos separadas en 3 gráficas
+diferentes: caracteres del 1 al 18, caracteres del 19 al 36 y dígitos
+(del 0 al 9). Nos interesa ver si las instancias de la misma clase
+están cerca entre sí, no la localización en el espacio. Por tanto
+omitimos la leyenda (que además sería extremadamente larga y taparía
+el gráfico).
 
 Generamos estas representaciones antes y después del preprocesado,
 para advertir si la reducción de dimensionalidad conlleva una pérdida
@@ -258,9 +315,48 @@ parece que exista una pérdida de información significativa. Las
 clases están mezcladas prácticamente en la misma medida.
 
 No obstante, estas representaciones no deben ser nuestra única
-justificación para concluir que el preprocesamiento es adecuado. Es
-por ello que basamos el grueso de nuestros argumentos de la sección
+justificación para concluir que el preprocesamiento es adecuado. Hay
+que tener en cuenta que no estamos representando todas las clases en
+el mismo gráfico, luego hay parejas de clases que no estamos
+comparando entre sí. Es por ello y por la dificultad de interpretar el gráfico que basamos el grueso de nuestros argumentos de la sección
 anterior en resultados empíricos obtenidos por validación.
+
+\section{Modelo lineal: Regresión Logística}
+
+Como modelo lineal elegimos Regresión Logística por ser el modelo que
+mejor se adapta a clasificación multietiqueta de los que
+conocemos. Este modelos viene implemendado en la función
+\texttt{SGDClassifier} de \textit{sklearn}, usando como función de
+pérdida la pérdida logarítmica. A la hora de predecir, este modelo
+estima la probabilidad de pertenencia de una dato a cada clase y le
+asigna la clase con mayor probabilidad (SoftMax).
+
+Para intentar compensar la menor potencia de este modelo, incorporamos
+algunas características polinómicas. Debido al elevado número de
+variables, no incorporamos los términos cruzados, sólo los cuadrados,
+cubos y cuartas potencias de cada una de las características
+originales, multiplicando el número de variables por 4. Esto no sería
+viable de no haber realizado la reducción de dimensionalidad por
+downsampling. Además, la documentación de esta función recomienda que
+las características presenten varianza 1 y media 0 para una
+convergencia más rápida del SGD, realizamos esto ajustando un
+StandardScaler (de \textit{sklearn}) a los datos de training y
+aplicándolo para transformar tanto éstos como los de test.
+
+\subsection{Estimación de hiperparámetros}
+
+\subsection{Función de pérdida y regularización}
+
+Dada una muestra de tamaño $N$, donde cada dato tiene $d$ características, y un problema de clasificación multietiqueta con $K$ etiquetas diferentes, la función de pérdida de este modelo es la pérdida logarítmica:
+
+\[ E(w_1, \ldots, w_k) = -\ln L(Y|w_1, \ldots, w_k) = -\sum\limits_{n=0}^{N}\sum\limits_{k=0}^{K} y_{nk}\ln \sigma (w^T_kx_n)\]
+
+donde $x_n$ el vector de características de la instancia $n$-ésima, $w_k$ es la fila $k$-ésima de una matriz de pesos $w$ de dimensión $K \times d$ e $y_{nk} = 1$ si la instancia $n$-ésima pertenece a la clase $k$ y $0$ en caso contrario.
+
+La implementación de este modelo minimiza esta función de pérdida usando gradiente descendente estocástico.
+
+REGULARIZACIÓN
+
 
 \section{Random Forest}
 
@@ -279,16 +375,6 @@ combinada con una baja variabilidad. Además, los árboles de decisión
 son muy adecuados para clasificación cuando el número de clases es
 elevado (basta asignar una clase a cada nodo), y en nuestro caso
 tenemos 46 clases.
-
-\subsection{Función de pérdida}
-
-La función de pérdida que intenta minimizar cada uno de los árboles de
-decisión que promedia random forest es:
-\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T)\] donde $|T|$ es el número
-de nodos del árbol $T$, $N_m$ es el número de instancias que caen en
-el nodo terminal $m$ y $Q_m(T)$ la medida de impureza del nodo
-terminal $m$. Como medida de impureza, tomamos Gini Index, aunque la
-entropía cruzada proporciona resultados parecidos.
 
 \subsection{Estimación de hiperparámetros}
 
@@ -330,12 +416,7 @@ estimadores, por lo que elegimos $287$ árboles (el primer pico) como valor para
 A continuación medimos la accuracy sobre el conjunto de train,
 obteniendo $1$. Esto nos hace pensar que el modelo sobreajusta e
 intentamos regularizar para reducir la complejidad (el número de
-nodos) de cada árbol penalizando con el parámetro $\alpha$. Quedando
-la función a minimizar como:
-\[R_\alpha(T)=R(T)+\alpha|T|\] donde $|T|$ es el número de nodos
-terminales del árbol $T$ y $R$ es la función de pérdida asociada a la
-impureza de los nodos terminales ($Q$) promediados por el número de
-muestras que instancias que caen cada nodo ($N$).
+nodos) de cada árbol penalizando con el parámetro $\alpha$.
 
 Originalmente el valor por defecto de $\alpha$ es 0, hemos probado a
 incrementarlo y medir la accuracy media de tres subdivisiones de
@@ -354,6 +435,19 @@ inicial de $\alpha$, $0$.
   \label{fig:HyperparametersRF}
 \end{figure}
 
+\subsection{Función de pérdida y regularización}
+
+La función de pérdida que intenta minimizar cada uno de los árboles de
+decisión que promedia random forest es:
+\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T) + \alpha|T|\] donde $|T|$ es el número de nodos del árbol $T$, $N_m$ es el número de instancias que caen en el nodo terminal $m$, $\alpha$ el coeficiente que penaliza la complejidad del árbol (para regularizar) y $Q_m(T)$ la medida de impureza del nodo terminal $m$. Como medida de impureza, tomamos Gini Index, aunque la entropía cruzada proporciona resultados parecidos.
+
+La medida de impureza Gini Index es:
+\[Q_m(T) = \sum\limits_{k=1}^{K} \hat p_{mk}(1 - \hat p_{mk})\] donde
+$\hat p_{mk}$ es la proporción de la clase $k$ en el nodo $m$.
+
+Como hemos visto en el apartado anterior, aumentar el valor de $\alpha$ no se consiguen mejores resultados, por lo que en este caso, a pesar de que el modelo parece sobreajustado, regularizar de esta forma no es la mejor opción. Es por esto que tomamos $\alpha = 0$, quedando la función de pérdida:
+\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T)\]
+
 \section{Multilayer Perceptron (MLP)}
 
 El modelo de perceptrón multicapa usado consta de tres capas: la capa
@@ -368,9 +462,7 @@ complejidad para obtener un bajo sesgo y facilidad para clasificación
 no binaria. Para afrontar el problema del sobreajuste, podemos
 utilizar early stopping como regularización, ya que disponemos de un
 número elevado de muestras de entrenamiento y podemos permitirnos
-sacrificar algunas con el fin de combatir el sobreajuste.
-
-Por tanto, consideramos este modelo adecuado para el problema.
+sacrificar algunas con el fin de combatir el sobreajuste. Por tanto, consideramos este modelo adecuado para el problema.
 
 \subsection{Estimación de hiperparámetros}
 
@@ -394,5 +486,17 @@ oculta del MLP usado para el ajuste tendrá 59 neuronas.
   \caption{Accuracy media de dos validaciones para distintos valores del hiperparámetro \texttt{N\_NEUR}}
   \label{fig:HyperparametersRF}
 \end{figure}
+
+\subsection{Función de pérdida y regularización}
+
+En la documentación nos indican que la función de pérdida usada en la implementación de \texttt{MLPClassifier} es la pérdida logarítmica, que para clasificación multietiqueta, con un conjunto de $K$ etiquetas, es:
+
+\[ L_{\log}(Y,P) = -\log Pr(Y|P) = -\frac{1}{N}\sum\limits_{i=0}^{N-1}\sum\limits_{k=0}^{K-1} y_{ik}\log p_{ik}\]
+
+donde $Y$ es uma matriz codificada en binario con las verdaderas etiquetas de la muestra, es decir, $y_{ik} = 1$ si el dato $x_i$ tiene etiqueta $k$ (y $0$ en otro caso) y $P$ es una matriz de estimaciones probabilísticas que depende de los pesos.
+
+Para regularizar usamos Early Stopping (\texttt{early\_stopping = True}). Esto separa un 10\% de los datos de ajuste para validación y termina el entrenamiento cuando la accuracy de este conjunto no mejora tras 10 épocas consecutivas.
+
+%Meter resultados
 
 \end{document}
