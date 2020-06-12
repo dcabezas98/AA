@@ -587,8 +587,62 @@ Como ya comentamos, usamos early stopping para regularizar el modelo. La accurac
 
 Como podemos observar, regularizando el modelo conseguimos un mejor desempeño en el conjunto de valización, claramente reduciendo el sobreajuste.
 
-\section{Desempeño de los modelos}
+\section{Comparación de los modelos}
 
+\subsection{Validación}
 
+Una vez ajustados los hiperparámetros de los modelos, procedemos a validarlos. Para ello entrenamos con el 80\% de los datos de train y validamos con el 20\%, como hemos comentado anteriormente. Insistimos en que disponemos de suficientes datos de validación para que los resultados sean significativos, por lo que evitamos realizar validación cruzada, que es computacionalmente muy costosa. En la siguiente tabla mostramos la accuracy obtenida con los diferentes modelos en el conjunto de entrenamiento y de validación:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+  \hline
+  \multicolumn{1}{|c|}{}& \textbf{Train} & \textbf{Validación}  \\ \hline
+  Random Forest         & 1                  & 0.9189258312020461\\
+  Multilayer Perceptron & 0.9329923273657289 & 0.8831202046035805 \\
+  Regresión Logística   & 0.7436700767263427 & 0.7192455242966752 \\\hline
+\end{tabular}
+\end{center}
+
+A la vista de los resultados obtenidos, el modelo con mejor desempeño es el Random Forest, seguido por el MLP y el modelo de Regresión Logística se queda bastante atrás.
+
+\subsection{Desempeño sobre test}
+
+Vamos a ver ahora el desempeño de estos modelos sobre el conjunto de
+test. Esta información no es relevante para tomar decisiones, ya que
+en un problema real carecemos de un subconjunto de test para realizar
+estas pruebas, por lo que todas las decisiones deben tomarse sobre la
+información obtenida a partir de los datos del subconjunto de
+entrenamiento y de validación.\\ Para sacar estos resultados,
+entrenamos con todo el conjunto de datos de entrenamiento iniciales
+(78200 instancias, 1700 por clase) uniendo nuestro anterior conjunto
+de train con el de validación. Calculamos la accuracy sobre las 13800
+instancias (300 por clase) del conjunto de test. Al entrenar con más
+datos, es esperable que los resultados obtenidos sean mejores.\\
+La accuracy obtenida por cada modelo es:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+  \hline
+  \multicolumn{1}{|c|}{}& \textbf{Train} & \textbf{Test}  \\ \hline
+  Random Forest         & 1                  & 0.923695652173913 \\
+  Multilayer Perceptron & 0.9485549872122763 & 0.8973913043478261 \\
+  Regresión Logística   & 0.7158567774936061 & 0.712536231884058 \\\hline
+\end{tabular}
+\end{center}
+
+Las matrices de confusión de los modelos obtenidas sobre el conjunto de test son:
+
+\begin{figure}[H]
+  \centering
+  \subfigure[Matriz de confusión Regresión Logística]{\includegraphics[width=57mm]{imgs/confLR}}
+  \subfigure[Matriz de confusión Random Forest]{\includegraphics[width=57mm]{imgs/confRF}}
+  \subfigure[Matriz de confusión Multilayer Perceptron]{\includegraphics[width=57mm]{imgs/confMLP}}
+  \caption{Matrices de confusión de los modelos}
+  \label{fig:Confussion Matrix}
+\end{figure}
+
+Las matrices de confusión de los modelos no lineales son casi diagonales, mientras que la del modelo de regresión logística presenta varias impurezas.
+
+Los resultados de los modelos sobre el conjunto de test confirman nuestras conclusiones sobre su bondad que deducimos de los resultados en validación.
 
 \end{document}
