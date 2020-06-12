@@ -28,7 +28,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import SGDClassifier
 
 # Validation score
-VALIDATION=False
+VALIDATION=True
 
 # For 2D visualization of DATA
 VISUALIZE2D=False
@@ -211,12 +211,11 @@ if __name__ == "__main__":
         print('Validation Accuracy:', mlp.score(val,val_label))
         
         input("\n--- Pulsar tecla para continuar ---\n")
-        '''
+        
         print('\nRegresión Logística:')
         lr.fit(traLin,traLin_label)
         print('Train Accuracy:',lr.score(traLin,traLin_label))
         print('Validation Accuracy:', lr.score(valLin,valLin_label))
-        '''
 
         input("\n--- Pulsar tecla para continuar ---\n")
 
