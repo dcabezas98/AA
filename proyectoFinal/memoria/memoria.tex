@@ -44,7 +44,7 @@
 \definecolor{webblue}{rgb}{0, 0, 0.5}  % less intense blue
 
 
-\title{Aprendizaje Automático: Proyecto Final \\ Devanagari Handwritten Characters}
+\title{\vspace{-15mm}Aprendizaje Automático: Proyecto Final \\ Devanagari Handwritten Characters}
 
 \author{David Cabezas Berrido y Patricia Córdoba Hidalgo}
 
@@ -54,6 +54,27 @@
 
 \maketitle
 \tableofcontents
+
+\vfill
+
+\textbf{Nota:} \\ Durante la resolución de los problemas, hay momentos
+en los que hemos tenido que volver atrás y rectificar
+decisiones. Intentamos plasmar los motivos que llevan a cada decisión,
+pero no hemos reflejado todo en el código, sólo la versión definitiva.
+
+Sí que hay secciones de código (selección de parámetros, por ejemplo)
+que hemos considerado interesante mantenerlas aunque no se
+ejecuten. Se pueden ejecutar dichas funciones en el cuaderno (en
+principio sólo se declaran), pero no es nada recomendable (los tiempos
+de ejecución son muy altos) así que en la versión definitiva
+intentamos mantener el equilibrio entre representar una gran
+proporción del trabajo que hemos realizado y que la ejecución sea
+rápida y cómoda para ir siguiéndola.
+
+Enfocamos este proyecto como la simulación de un problema real: sólo
+basamos nuestras decisiones en el desempeño sobre el conjunto de
+training, con la excepción de que disponemos de un conjunto de test
+para contrastar y valorar los resultados obtenidos.
 
 \newpage
 
@@ -102,13 +123,14 @@ train y test existente.
 
 Extraemos un conjunto de validación del 20\% de los datos de
 entrenamiento para consultar la eficacia práctica de ciertas
-decisiones que tomamos durante el preprocesamiento. Esto nos deja con
-62560 (80\%) datos para entrenar cada alternativa y 15640 datos para
-validar. Debido a la abundancia de datos, podemos esperar que los
-scores obtenidos al validar sean representativos de la bondad real de
-un modelo o procesamiento, así que decidimos no usar validación
-cruzada, ya que es computacionalmente muy costosa y el ajuste de los
-modelos es lento debido a la cantidad de datos.
+decisiones que tomamos durante el preprocesamiento y comparar la
+bondad de los modelos. Esto nos deja con 62560 (80\%) datos para
+entrenar cada alternativa y 15640 datos para validar. Debido a la
+abundancia de datos, podemos esperar que los scores obtenidos al
+validar sean representativos de la bondad real de un modelo o
+preprocesamiento, así que decidimos no usar validación cruzada, ya que
+es computacionalmente muy costosa y el ajuste de los modelos es lento
+debido a la cantidad de datos.
 
 Para ello usamos la función \texttt{train\_test\_split} de
 \textit{sklearn} e indicamos mediante la opción \texttt{stratify} que
@@ -131,13 +153,17 @@ formato \texttt{npz}.
 Este fichero solo se ejecuta una vez para cambiar el formato de los
 datos. Tras esto, podemos usar los datos guardados en disco para las
 sucesivas ejecuciones del código. Proporcionamos los datos ya
-transformados, aunque en el fichero \texttt{main.py} se puede alterar
-la variable \texttt{PNG\_TO\_NP} para ejecutar el script que carga las
-imágenes y almacena estos datos en disco.
+transformados.
 
 \section{Métrica de error}
 
-La métrica de error que usaremos para contrastar diferentes modelos, hiperparámetros y alternativas será la accuracy, que es la proporción de etiquetas que predice correctamente el modelo. Usaremos esta métrica para ver realmente cuál es el desempeño del modelo y cómo de bien clasifica las etiquetas. Como los datos están balanceados, es una métrica adecuada de la bondad del modelo, además de fácil de interpretar.
+La métrica de error que usaremos para contrastar diferentes modelos,
+hiperparámetros y alternativas será la accuracy, que es la proporción
+de etiquetas que predice correctamente el modelo. Usaremos esta
+métrica para ver realmente cuál es el desempeño del modelo y cómo de
+bien clasifica las etiquetas. Como los datos están balanceados, es una
+métrica adecuada de la bondad del modelo, además de fácil de
+interpretar.
 
 También podemos visualizar la matriz de confusión. Es una matriz
 cuadrada de orden el número de clases con números naturales como
@@ -153,9 +179,16 @@ ejemplos.
 
 \section{Preprocesamiento}
 
-El preprocesamiento se realiza
-imagen a imagen, siendo el resultado sólo dependiente de la propia
-imagen y por tanto paralelizable. Para cada imagen realizamos dos operaciones: centrado y reescalado, y downsampling. Tras este proceso, nos quedan $196$ características ($14 \times 14$) y comprobamos con la función \texttt{VarianceThreshold} de \textit{sklearn} que no hay características con varianza $0$ en el conjunto de train (todas aportan algo de información). Consideramos que no es necesario normalizar las variables, ya que todas tienen la misma naturaleza (intensidad de gris en un píxel) y la misma escala (entre $0$ y $1$).
+El preprocesamiento se realiza imagen a imagen, siendo el resultado
+sólo dependiente de la propia imagen y por tanto paralelizable. Para
+cada imagen realizamos dos operaciones: centrado y reescalado, y
+downsampling. Tras este proceso, nos quedan $196$ características
+($14 \times 14$) y comprobamos con la función
+\texttt{VarianceThreshold} de \textit{sklearn} que no hay
+características con varianza $0$ en el conjunto de train (todas
+aportan algo de información). Consideramos que no es necesario
+normalizar las variables, ya que todas tienen la misma naturaleza
+(intensidad de gris en un píxel) y la misma escala (entre $0$ y $1$).
 
 \subsection{Centrado y reescalado}
 
@@ -177,6 +210,8 @@ Para calcular la caja englobante del carácter, usamos el
   \centering
   \subfigure[Muestra antes del preprocesado]{\includegraphics[width=87mm]{imgs/sample-kna.png}}
   \subfigure[Thresholding y closing]{\includegraphics[width=87mm]{imgs/closing-thresholding.png}}
+\end{figure}
+\begin{figure}[H]
   \subfigure[Recortado de la caja englobante]{\includegraphics[width=87mm]{imgs/crop.png}}
   \subfigure[Reescalado]{\includegraphics[width=87mm]{imgs/resize.png}}
   \caption{Proceso de centrado y reescalado sobre una instancia correspondiente al carácter kna\\ (usando \texttt{WIDTH} = 24)}
@@ -208,7 +243,7 @@ obtenida sobre nuestro subconjunto de validación en cada una de las
 siguientes comparaciones.
 
 Durante el preprocesamiento, hemos tomado dos decisiones que podrían
-afectar al desempeño posterior de los modelos. Esas dos decisiones
+afectar al desempeño posterior de los modelos. Estas dos decisiones
 son: el valor de la variable \texttt{WIDTH} y usar o no
 \texttt{block\_reduce} para reducir la dimensionalidad.
 
@@ -220,10 +255,10 @@ recortan y las que no.
 La decisión de reducir dimensionalidad con \texttt{block\_reduce} es
 arriesgada porque se produce una pérdida de información de los
 datos. Tenemos que contrastar si esa pérdida de información es
-significativa atendiedo a las ventajas que supone hacerla: simplifica
+significativa atendiendo a las ventajas que supone hacerla: simplifica
 el problema (menor dimensionalidad) y reduce los tiempos de ejecución.
 
-Los resultados obtenidos son (con \texttt{block\_reduce}=True):
+Los resultados obtenidos (con \texttt{block\_reduce}=True) son:
 
 \begin{center}
 \begin{tabular}{|c|c|c|}
@@ -238,7 +273,7 @@ Los resultados obtenidos son (con \texttt{block\_reduce}=True):
 \end{tabular}
 \end{center}
 
-Los resultados obtenidos son (con \texttt{block\_reduce}=False):
+Los resultados obtenidos (con \texttt{block\_reduce}=False) son:
 
 \begin{center}
 \begin{tabular}{|c|c|c|}
@@ -253,11 +288,12 @@ Los resultados obtenidos son (con \texttt{block\_reduce}=False):
 \end{center}
 
 A la vista de los resultados obtenidos, hemos decidido que merece la
-pena usar \texttt{block\_reduce}. El valor de \texttt{WIDTH} que
+pena usar \texttt{block\_reduce} y el valor de \texttt{WIDTH} que
 elegimos es $28$. Esta configuración presenta la mayor media y el
 mayor máximo de las accuracy en las validaciones de los modelos.
 
-Los resultados tras el preprocesamiento comparándolos con los datos en crudo son:
+Los resultados tras el preprocesamiento comparándolos con los datos en
+crudo son:
 \begin{center}
 \begin{tabular}{|c|c|c|}
   \hline
@@ -270,7 +306,7 @@ Los resultados tras el preprocesamiento comparándolos con los datos en crudo so
 \end{center}
 
 Podemos observar que con el preprocesamiento hemos conseguido reducir
-notablemente la dimensionalidad del problema: pasando de
+notablemente la dimensionalidad de los datos: pasando de
 $28\times 28=784$ variables a $14\times 14=196$. Además, mejoramos en
 cierta medida la precisión de los modelos.
 
@@ -282,7 +318,7 @@ permitirá discernir unas clases de otras, y así conocer (entre otras
 cosas) si se ha perdido información durante el
 preprocesamiento. Existen algoritmos para esto: PCA (Principal
 Component Analysis), que proyecta las dos direcciones que más nos
-ayuden a discernir los datos. También TSNE (T-distributd Stochastic
+ayudan a discernir los datos. También TSNE (T-distributd Stochastic
 Neighbor Embedding), un algoritmo iterativo (lo lanzamos con la salida
 de PCA como proyección inicial) que proyecta los datos en dos
 dimensiones de forma que para cada dato sus vecinos más cercanos
@@ -291,19 +327,18 @@ queden proyectados cerca.
 El gran número de datos hace que estas representaciones tarden mucho
 tiempo en generarse y estén muy cargadas, por lo que sólo
 representamos el 40\% de los datos (elegidos aleatoriamente). Para
-ellod usamos la función \texttt{train\_test\_split} de
+ello usamos la función \texttt{train\_test\_split} de
 \textit{sklearn} e indicamos mediante la opción \texttt{stratify} que
 queremos preservar la proporción de elementos de cada clase en cada
-uno de los conjuntos, de forma que sigan perfectamente
-balanceadas. Debido a la abundancia de datos, este 40\% es
+uno de los conjuntos. Debido a la abundancia de datos, este 40\% es
 suficientemente representativo de la distribución de los datos.
 
 Además, debido al elevado número de clases, no podemos representar
-cada un con un color diferente de forma que sean fácilmente
+cada una con un color diferente de forma que sean fácilmente
 distinguibles, por eso las representamos separadas en 3 gráficas
 diferentes: caracteres del 1 al 18, caracteres del 19 al 36 y dígitos
 (del 0 al 9). Nos interesa ver si las instancias de la misma clase
-están cerca entre sí, no la localización en el espacio. Por tanto
+están cerca entre sí, no la localización en el espacio, por tanto
 omitimos la leyenda (que además sería extremadamente larga y taparía
 el gráfico).
 
@@ -327,7 +362,7 @@ considerable de información.
   \subfigure[PCA. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/pca-nopre2}}
   \subfigure[TSNE. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne2}}
   \subfigure[TSNE. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne-nopre2}}
-  \caption{Proyecciones en 2D de las clases correspondientes a los caracteres del 1 al 18}
+  \caption{Proyecciones en 2D de las clases correspondientes a los caracteres del 19 al 36}
   \label{fig:char19-36}
 \end{figure}
 
@@ -337,7 +372,7 @@ considerable de información.
   \subfigure[PCA. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/pca-nopre3}}
   \subfigure[TSNE. Con preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne3}}
   \subfigure[TSNE. Sin preprocesamiento]{\includegraphics[width=60mm]{imgs/tsne-nopre3}}
-  \caption{Proyecciones en 2D de las clases correspondientes a los caracteres del 1 al 18}
+  \caption{Proyecciones en 2D de las clases correspondientes a los dígitos del 0 al 9}
   \label{fig:digit0-9}
 \end{figure}
 
@@ -355,39 +390,59 @@ No obstante, estas representaciones no deben ser nuestra única
 justificación para concluir que el preprocesamiento es adecuado. Hay
 que tener en cuenta que no estamos representando todas las clases en
 el mismo gráfico, luego hay parejas de clases que no estamos
-comparando entre sí. Es por ello y por la dificultad de interpretar el gráfico que basamos el grueso de nuestros argumentos de la sección
+comparando entre sí. Es por ello y por la dificultad de interpretar los
+gráficos que basamos el grueso de nuestros argumentos de la sección
 anterior en resultados empíricos obtenidos por validación.
 
 \section{Modelo lineal: Regresión Logística}
 
 Como modelo lineal elegimos Regresión Logística por ser el modelo que
 mejor se adapta a clasificación multietiqueta de los que
-conocemos. Este modelos viene implemendado en la función
+conocemos. Este modelo viene implemendado en la función
 \texttt{SGDClassifier} de \textit{sklearn}, usando como función de
 pérdida la pérdida logarítmica. A la hora de predecir, este modelo
-estima la probabilidad de pertenencia de una dato a cada clase y le
+estima la probabilidad de pertenencia de un dato a cada clase y le
 asigna la clase con mayor probabilidad (SoftMax).
 
 Para intentar compensar la menor potencia de este modelo, incorporamos
 algunas características polinómicas. Debido al elevado número de
 variables, no incorporamos los términos cruzados (provoca error de
-memoria), sólo los cuadrados, cubos y cuartas potencias de cada una de
-las características originales, multiplicando el número de variables
-por 4. Esto no sería viable de no haber realizado la reducción de
-dimensionalidad por downsampling (provoca error de memoria). Además,
-la documentación de esta función recomienda que las características
-presenten varianza 1 y media 0 para una convergencia más rápida del
-SGD cuando se utiliza el learning rate por defecto. Realizamos esto ajustando un StandardScaler (de \textit{sklearn})
-a los datos de training y aplicándolo para transformar tanto éstos
-como los de test.
+memoria aun con polinomios de grado 2), sólo los cuadrados, cubos y
+cuartas potencias de cada una de las características originales,
+multiplicando el número de variables por 4. Esto no sería viable de no
+haber realizado la reducción de dimensionalidad por downsampling
+(provoca error de memoria). Además, la documentación de esta función
+recomienda que las características presenten varianza 1 y media 0 para
+una convergencia más rápida del SGD cuando se utiliza el learning rate
+por defecto. Realizamos esto ajustando un StandardScaler (de
+\textit{sklearn}) a los datos de training y aplicándolo para
+transformar tanto éstos como los de test.
 
-Durante el entrenamiento del modelo recibimos warnings acerca de la convergencia, por lo que tuvimos que incrementar el número máximo de iteraciones (\texttt{max\_iter}) a $2000$. 
+Durante el entrenamiento del modelo recibimos warnings acerca de la convergencia, por lo que tuvimos que incrementar el número máximo de iteraciones (\texttt{max\_iter}) de $1000$ a $2000$. 
 
 \subsection{Estimación de hiperparámetros}
 
-El hiperparámetro que ajustaremos del modelo lineal es $\alpha$ (el coeficiente que penaliza en la regularización Ridge). En la implementación del modelo, el learning rate se calcula: $\eta = \frac{1}{\alpha (t + t_0)}$, con $t_0$ escogido por una heurística propuesta por Leon Bottou y $t$ denotando la etapa.
+El hiperparámetro que ajustaremos del modelo lineal es $\alpha$ (el
+coeficiente que penaliza en la regularización Ridge). En la
+implementación del modelo, el learning rate (seleccionando la opción
+\texttt{'optimal'}, que es la que ofrece por defecto la
+implementación) se calcula: $\eta = \frac{1}{\alpha (t + t_0)}$, con
+$t_0$ escogido por una heurística propuesta por Leon Bottou y $t$
+denotando la etapa.
 
-Para estimar el valor de $\alpha$, que necesariamente tiene que ser distinto de cero para usar dicho learning rate, ajustamos el modelo con varios valores. En la primera gráfica, podemos observar que la accuracy del modelo disminuye al aumentar el valor de alpha, así que realizamos mediciones con valores menores. En la segunda, vimos que el pico se alcanzaba entre $0.00001$ y $0.0001$, por lo que volvimos a repetir el experimento ahora entre $0.00002$ y $0.00007$. Pudimos comprobar que el máximo se alcanza entre $0.00003$ y $0.00004$, así que volvimos a ajustar el modelo con valores de $\alpha$ comprendidos entre $0.000025$ y $0.000045$. En esta gráfica podemos observar que la diferencia de accuracy entre estos valores es bastante menor. Como se alcanza el mayor valor de accuracy en $\alpha = 0.00004$, éste es el valor que tomaremos para el ajuste.
+Para estimar el valor de $\alpha$, que necesariamente tiene que ser
+distinto de cero para usar dicho learning rate, ajustamos el modelo
+con varios valores. En la primera gráfica, podemos observar que la
+accuracy del modelo disminuye al aumentar el valor de alpha, así que
+realizamos mediciones con valores menores. En la segunda, vimos que el
+pico se alcanzaba entre $0.00001$ y $0.0001$, por lo que volvimos a
+repetir el experimento ahora entre $0.00002$ y $0.00007$. Pudimos
+comprobar que el máximo se alcanza entre $0.00003$ y $0.00004$, así
+que volvimos a ajustar el modelo con valores de $\alpha$ comprendidos
+entre $0.000025$ y $0.000045$. En esta gráfica podemos observar que la
+diferencia de accuracy entre estos valores es bastante menor. Como se
+alcanza el mayor valor de accuracy en $\alpha = 0.00004$, éste es el
+valor que tomaremos para el ajuste.
 
 \begin{figure}[H]
   \centering
@@ -416,11 +471,17 @@ clase $k$ y $0$ en caso contrario.
 La implementación de este modelo minimiza esta función de pérdida
 usando gradiente descendente estocástico.
 
-Para disminuir la variabilidad del modelo, usamos regularización Ridge. Es adecuada porque todas las características son relevantes ya que tienen la misma naturaleza y durante el preprocesado hemos eliminado aquellas que podrían no aportar demasiada información.
+Para disminuir la variabilidad del modelo, usamos regularización
+Ridge. Es adecuada porque todas las características son relevantes ya
+que tienen la misma naturaleza y durante el preprocesado hemos
+eliminado aquellas que podrían no aportar demasiada información.
 
-Así, el error que minimizamos en regularización es $E_{aug} = E(w_1, \ldots, w_k) + \alpha \|w\|^2$, donde $\|.\|^2$ denota la norma de Frobenius.
+Así, el error que minimizamos en regularización es
+$E_{aug} = E(w_1, \ldots, w_k) + \alpha \|w\|^2$, donde $\|.\|^2$
+denota la norma de Frobenius.
 
-Como hemos discutido en la sección de selección de hiperparámetros, usaremos $\alpha = 0.00004$.
+Como hemos discutido en la sección de selección de hiperparámetros,
+usaremos $\alpha = 0.00004$.
 
 \section{Random Forest}
 
@@ -437,7 +498,7 @@ variabilidad.
 Elegimos este modelo por su capacidad para conseguir un bajo sesgo
 combinada con una baja variabilidad. Además, los árboles de decisión
 son muy adecuados para clasificación cuando el número de clases es
-elevado (basta asignar una clase a cada nodo), y en nuestro caso
+elevado (basta asignar una clase a cada hoja), y en nuestro caso
 tenemos 46 clases.
 
 \subsection{Estimación de hiperparámetros}
@@ -467,12 +528,13 @@ $293$. Viendo la escala del eje, concluimos que la accuracy
 satura en este tramo y no compensa seguir aumentando el número de
 estimadores, por lo que elegimos $287$ árboles (el primer pico) como valor para el hiperparámetro.
 
+\vspace{-4mm}
 \begin{figure}[H]
   \centering
-  \subfigure[Entre $50$ y $300$, de $50$ en $50$]{\includegraphics[width=87mm]{imgs/grafNestimators1}}
-  \subfigure[Entre $200$ y $300$, de $25$ en $25$]{\includegraphics[width=87mm]{imgs/grafNestimators2}}
-  \subfigure[Entre $275$ y $300$, de $5$ en $5$]{\includegraphics[width=87mm]{imgs/grafNestimators3}}
-  \subfigure[Entre $285$ y $295$, de $2$ en $2$]{\includegraphics[width=87mm]{imgs/grafNestimators4}}
+  \subfigure[Entre $50$ y $300$, de $50$ en $50$]{\includegraphics[width=85mm]{imgs/grafNestimators1}}
+  \subfigure[Entre $200$ y $300$, de $25$ en $25$]{\includegraphics[width=85mm]{imgs/grafNestimators2}}
+  \subfigure[Entre $275$ y $300$, de $5$ en $5$]{\includegraphics[width=85mm]{imgs/grafNestimators3}}
+  \subfigure[Entre $285$ y $295$, de $2$ en $2$]{\includegraphics[width=85mm]{imgs/grafNestimators4}}
   \caption{Accuracy media de tres validaciones para distintos valores del hiperparámetro \texttt{n\_estimators}}
   \label{fig:HyperparametersRF}
 \end{figure}
@@ -503,13 +565,23 @@ inicial de $\alpha$, $0$.
 
 La función de pérdida que intenta minimizar cada uno de los árboles de
 decisión que promedia random forest es:
-\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T) + \alpha|T|\] donde $|T|$ es el número de nodos del árbol $T$, $N_m$ es el número de instancias que caen en el nodo terminal $m$, $\alpha$ el coeficiente que penaliza la complejidad del árbol (para regularizar) y $Q_m(T)$ la medida de impureza del nodo terminal $m$. Como medida de impureza, tomamos Gini Index, aunque la entropía cruzada proporciona resultados parecidos.
+\[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T) + \alpha|T|\] donde $|T|$
+es el número de nodos terminales del árbol $T$, $N_m$ es el número de
+instancias que caen en el nodo terminal $m$, $\alpha$ el coeficiente
+que penaliza la complejidad del árbol (para regularizar) y $Q_m(T)$ la
+medida de impureza del nodo terminal $m$. Como medida de impureza,
+tomamos Gini Index, aunque la entropía cruzada proporciona resultados
+similares.
 
 La medida de impureza Gini Index es:
 \[Q_m(T) = \sum\limits_{k=1}^{K} \hat p_{mk}(1 - \hat p_{mk})\] donde
 $\hat p_{mk}$ es la proporción de la clase $k$ en el nodo $m$.
 
-Como hemos visto en el apartado anterior, aumentar el valor de $\alpha$ no se consiguen mejores resultados, por lo que en este caso, a pesar de que el modelo parece sobreajustado, regularizar de esta forma no es la mejor opción. Es por esto que tomamos $\alpha = 0$, quedando la función de pérdida:
+Como hemos visto en el apartado anterior, aumentar el valor de
+$\alpha$ no se consiguen mejores resultados, por lo que en este caso,
+a pesar de que el modelo parece sobreajustado, regularizar de esta
+forma no es la mejor opción. Es por esto que tomamos $\alpha = 0$,
+quedando la función de pérdida:
 \[R(T) = \sum\limits_{m=1}^{|T|} N_mQ_m(T)\]
 
 \section{Multilayer Perceptron (MLP)}
@@ -571,9 +643,8 @@ probabilísticas que depende de los pesos.
 Para regularizar usamos Early Stopping (\texttt{early\_stopping =
   True}). Esto separa un 10\% de los datos de ajuste para validación y
 termina el entrenamiento cuando la accuracy de este conjunto no mejora
-en al menos $10^{-4}$ por 10 iteraciones consecutivas.
-
-Como ya comentamos, usamos early stopping para regularizar el modelo. La accuracy obtenida con y sin regularización es:
+en al menos $10^{-4}$ por 10 iteraciones consecutivas. \\ La accuracy
+obtenida con y sin regularización es:
 
 \begin{center}
 \begin{tabular}{|c|c|c|}
@@ -585,13 +656,22 @@ Como ya comentamos, usamos early stopping para regularizar el modelo. La accurac
 \end{tabular}
 \end{center}
 
-Como podemos observar, regularizando el modelo conseguimos un mejor desempeño en el conjunto de valización, claramente reduciendo el sobreajuste.
+Como podemos observar, regularizando el modelo conseguimos un mejor
+desempeño en el conjunto de valización, claramente reduciendo el
+sobreajuste.
 
 \section{Comparación de los modelos}
 
 \subsection{Validación}
 
-Una vez ajustados los hiperparámetros de los modelos, procedemos a validarlos. Para ello entrenamos con el 80\% de los datos de train y validamos con el 20\%, como hemos comentado anteriormente. Insistimos en que disponemos de suficientes datos de validación para que los resultados sean significativos, por lo que evitamos realizar validación cruzada, que es computacionalmente muy costosa. En la siguiente tabla mostramos la accuracy obtenida con los diferentes modelos en el conjunto de entrenamiento y de validación:
+Una vez ajustados los hiperparámetros de los modelos, procedemos a
+validarlos. Para ello entrenamos con el 80\% de los datos de train y
+validamos con el 20\%, como hemos comentado anteriormente. Insistimos
+en que disponemos de suficientes datos de validación para que los
+resultados sean significativos, por lo que evitamos realizar
+validación cruzada, que es computacionalmente muy costosa. En la
+siguiente tabla mostramos la accuracy obtenida con los diferentes
+modelos en el conjunto de entrenamiento y de validación:
 
 \begin{center}
 \begin{tabular}{|c|c|c|}
@@ -603,7 +683,9 @@ Una vez ajustados los hiperparámetros de los modelos, procedemos a validarlos. 
 \end{tabular}
 \end{center}
 
-A la vista de los resultados obtenidos, el modelo con mejor desempeño es el Random Forest, seguido por el MLP y el modelo de Regresión Logística se queda bastante atrás.
+A la vista de los resultados obtenidos, el modelo con mejor desempeño
+es el Random Forest, seguido por el MLP y el modelo de Regresión
+Logística se queda bastante atrás.
 
 \subsection{Desempeño sobre test}
 
@@ -626,12 +708,13 @@ La accuracy obtenida por cada modelo es:
   \multicolumn{1}{|c|}{}& \textbf{Train} & \textbf{Test}  \\ \hline
   Random Forest         & 1                  & 0.923695652173913 \\
   Multilayer Perceptron & 0.9485549872122763 & 0.8973913043478261 \\
-  Regresión Logística   & 0.7158567774936061 & 0.712536231884058 \\\hline
+  Regresión Logística   & 0.74423273657289 & 0.735072463768116 \\\hline
 \end{tabular}
 \end{center}
 
-Las matrices de confusión de los modelos obtenidas sobre el conjunto de test son:
-
+Las matrices de confusión de los modelos obtenidas sobre el conjunto
+de test son:
+\vspace{-4mm}
 \begin{figure}[H]
   \centering
   \subfigure[Matriz de confusión Regresión Logística]{\includegraphics[width=57mm]{imgs/confLR}}
@@ -640,9 +723,74 @@ Las matrices de confusión de los modelos obtenidas sobre el conjunto de test so
   \caption{Matrices de confusión de los modelos}
   \label{fig:Confussion Matrix}
 \end{figure}
+\vspace{-4mm}
 
-Las matrices de confusión de los modelos no lineales son casi diagonales, mientras que la del modelo de regresión logística presenta varias impurezas.
+Las matrices de confusión de los modelos no lineales son casi
+diagonales, mientras que la del modelo de regresión logística presenta
+algunas impurezas.
 
-Los resultados de los modelos sobre el conjunto de test confirman nuestras conclusiones sobre su bondad que deducimos de los resultados en validación.
+Los resultados de los modelos sobre el conjunto de test confirman
+nuestras conclusiones sobre su bondad que deducimos de los resultados
+en validación.
+
+\section{Conclusiones y justificación}
+
+\subsection{Valoración de los resultados}
+
+Ante los resultados obtenidos por validación, seleccionamos Random
+Forest como el mejor modelo y estimamos una accuracy de generalización
+de $0.9189258312020461$ (obtenido por validación).
+
+Tras comparar con los scores obtenidos sobre el conjunto de Test,
+observamos que efectivamente Random Forest generaliza mejor. La
+accuracy sobre test obtenida es ligeramente mayor a la estimada, como
+en teoría debe ocurrir, ya que el modelo con el que hemos validado
+estaba entrenado con menos datos y presenta una estimación pesimista
+de la accuracy fuera de la muestra.
+
+De igual modo ocurre con los otros modelos, la validación es una
+estimación pesimista de su capacidad de generalización. Al menos
+basándonos en los datos de test.
+
+\subsection{Comparación con modelos diseñados por terceros}
+
+En el artículo
+\href{https://ieeexplore.ieee.org/document/7400041}{Deep learning
+  based large scale handwritten Devanagari character recognition}
+consiguen una accuracy sobre el conjunto de test del 98.47\% usando
+Deep Convolutional Neural Network con Dropout para mejorar dicha
+accuracy. Según la página
+\href{https://archive.ics.uci.edu/ml/datasets/Devanagari+Handwritten+Character+Dataset}{Devanagari
+  Handwritten Character Dataset Data Set}, es la accuracy más alta
+obtenida sobre el conjunto de test para este dataset. También hemos
+encontrado otros trabajos sobre este dataset como
+\href{https://github.com/PrathamNawal/Devanagari-Character-Recognition}{https://github.com/PrathamNawal/Devanagari-Character-Recognition},
+que utilizan técnicas similares y logran aproximadamente el mismo
+resultado.
+
+Esto nos lleva a pensar que las Redes Neuronales Convolucionales están
+muy por encima para este tipo de problemas, como ya se nos comentó en
+clase de teoría. Luego los modelos considerados no son los más
+adecuados para este problema.
+
+Aun así, dentro de los modelos que hemos estudiado, consideramos que
+nuestros resultados son más que aceptables. Hemos encontrado un
+trabajo
+(\href{https://github.com/rishianand54/devanagari-character-recognition-system}{https://github.com/rishianand54/devanagari-character-recognition-system})
+en el que ajusta diversos modelos, que incluyen Random Forest y KNN, y
+al final logra una accuracy máxima sobre test del 92\%, precisamente
+en Random Forest.
+
+Este otro trabajo (utiliza el mismo dataset, pero sólo considera las
+36 clases correspondientes a los caracteres, desechando los dígitos):
+\href{https://github.com/PriSawant7/ML-Devanagari-Character-Recognition}{https://github.com/PriSawant7/ML-Devanagari-Character-Recognition}
+compara diversos modelos, que incluyen KNN, Random Forest, MLP y
+CNN. Aunque las accuracy que obtiene son bastante más bajas,
+sospechamos que se debe a que no realiza preprocesamiento (ni siquiera
+elimina el marco).
+
+Por tanto, aunque nuestros modelos sean superados por las CNN,
+consideramos que hemos logrado sacarles un buen desempeño mediante la
+elección de hiperparámetros y el preprocesamiento.
 
 \end{document}
