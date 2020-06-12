@@ -28,7 +28,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import SGDClassifier
 
 # Validation score
-VALIDATION=True
+VALIDATION=False
 
 # For 2D visualization of DATA
 VISUALIZE2D=False
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     stdScaler=StandardScaler().fit(trainLin)
     trainLin=stdScaler.transform(trainLin)
     testLin=polynomial(test,4)
-    testLin=stdScaler.transform(trainLin)
+    testLin=stdScaler.transform(testLin)
     print('Características para el modelo lineal:', trainLin.shape[1])
     input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -220,7 +220,7 @@ if __name__ == "__main__":
         input("\n--- Pulsar tecla para continuar ---\n")
 
     print('Desempeño sobre Test')
-    
+    '''
     print('\nRandom Forest:')
     acc, conf_mat = modelPerformance(rf,train,train_label,test,test_label)
     print('Accuracy:',acc)
@@ -232,11 +232,11 @@ if __name__ == "__main__":
     acc, conf_mat = modelPerformance(mlp,train,train_label,test,test_label)
     print('Accuracy:',acc)
     visualizeMatrix(conf_mat,'MLP:\nMatriz de confusión sobre Test',conf=True)
-
+    '''
     input("\n--- Pulsar tecla para continuar ---\n")
     
     print('\nRegresión Logística:')
-    acc, conf_mat = modelPerformance(lr,train,train_label,test,test_label)
+    acc, conf_mat = modelPerformance(lr,trainLin,train_label,testLin,test_label)
     print('Accuracy:',acc)
     visualizeMatrix(conf_mat,'Regresión Logística:\nMatriz de confusión sobre Test',conf=True)
     
