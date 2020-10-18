@@ -51,7 +51,7 @@ np.random.seed(25)
 # Función para leer los datos
 def readData(data_file):
     
-    data=pd.read_csv(DATA,sep=',', na_values='?',header=None) # Leo el archivo
+    data=pd.read_csv(data_file,sep=',', na_values='?',header=None) # Leo el archivo
     x=data.iloc[:,5:-1] # Elimino las características no predictivas (5 primeras)
     y=data.iloc[:,-1] # Atributo objetivo (a predecir)
 
